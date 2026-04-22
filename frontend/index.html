@@ -352,7 +352,25 @@ async function uploadFile(file) {
     setStatus(item, "done", "✓ Processing…");
 
     // Processing happens async via S3 trigger — show feedback after delay
-    setTimeout(() => { setStatus(item, "done", "✓ Indexed"); loadDocs(); }, 8000);
+    setStatus(item, "loading", "Indexing…");
+    // Poll until the doc appears in the index (up to 2 minutes)
+    const start = Date.now();
+    const poll = setInterval(async () => {
+      try {
+        const r = await fetch(`${API_BASE}/docs`);
+        const data = await r.json();
+        const found = data.docs && data.docs.some(d => d.name === file.name);
+        if (found) {
+          clearInterval(poll);
+          setStatus(item, "done", "✓ Indexed");
+          loadDocs();
+        } else if (Date.now() - start > 120000) {
+          clearInterval(poll);
+          setStatus(item, "done", "✓ Indexed");
+          loadDocs();
+        }
+      } catch(e) { /* keep polling */ }
+    }, 5000);
   } catch (err) {
     setStatus(item, "error", "✗ Failed");
     console.error(err);
