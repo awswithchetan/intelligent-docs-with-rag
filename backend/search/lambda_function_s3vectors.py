@@ -97,7 +97,7 @@ def lambda_handler(event, context):
 def generate_answer(question: str, context: str) -> str:
     body = {
         "anthropic_version": "bedrock-2023-05-31",
-        "max_tokens": 1024,
+        "max_tokens": 2048,
         "system": SYSTEM_PROMPT,
         "messages": [{
             "role": "user",

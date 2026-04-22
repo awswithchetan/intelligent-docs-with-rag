@@ -442,12 +442,6 @@ function appendMessage(role, text, sources) {
 
   const avatar = role === "user" ? "👤" : "🤖";
   let sourcesHtml = "";
-  if (sources && sources.length > 0) {
-    const chips = sources.map(s =>
-      `<span class="source-chip">📄 ${escHtml(s.doc_name)} p.${s.page}</span>`
-    ).join("");
-    sourcesHtml = `<div class="msg-sources">${chips}</div>`;
-  }
 
   wrap.innerHTML = `
     <div class="msg-avatar">${avatar}</div>
