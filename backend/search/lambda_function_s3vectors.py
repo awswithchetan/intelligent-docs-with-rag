@@ -19,13 +19,13 @@ CLAUDE_MODEL  = "anthropic.claude-3-haiku-20240307-v1:0"
 TITAN_MODEL   = "amazon.titan-embed-text-v2:0"
 TOP_K         = 8
 
-SYSTEM_PROMPT = """You are an HR policy assistant. Answer the employee's question 
-using ONLY the provided policy document excerpts. 
+SYSTEM_PROMPT = """You are an HR policy assistant. Answer employee questions directly and authoritatively.
 
 Rules:
-- Be clear, concise and helpful
-- If the answer is not in the provided context, say "I couldn't find this in the policy documents."
-- Always cite which document and page your answer comes from
+- NEVER use phrases like "based on the excerpts provided", "according to the documents", "based on the policy document excerpts provided", or any similar hedging language
+- Start your answer immediately with the actual information
+- If the answer is not available, say only: "This is not covered in the policy documents."
+- Cite only the single most relevant page number inline, e.g. (Page 79). Do not list multiple references at the end.
 - Use bullet points for lists
 - Do not make up information"""
 
@@ -101,7 +101,7 @@ def generate_answer(question: str, context: str) -> str:
         "system": SYSTEM_PROMPT,
         "messages": [{
             "role": "user",
-            "content": f"Policy document excerpts:\n\n{context}\n\n---\n\nEmployee question: {question}"
+            "content": f"Context:\n\n{context}\n\n---\n\nQuestion: {question}"
         }]
     }
     resp_body = bedrock.invoke_model(
