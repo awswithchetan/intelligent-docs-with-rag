@@ -1,6 +1,5 @@
 import json
 import boto3
-import os
 
 s3vectors = boto3.client("s3vectors", region_name="ap-south-1")
 
@@ -10,7 +9,6 @@ INDEX_NAME    = "hr-policy-index"
 
 def lambda_handler(event, context):
     try:
-        # List all vectors to get distinct docs + chunk counts
         docs = {}
         next_token = None
         while True:
@@ -20,16 +18,15 @@ def lambda_handler(event, context):
                 kwargs["nextToken"] = next_token
             resp = s3vectors.list_vectors(**kwargs)
             for v in resp.get("vectors", []):
+                key = v.get("key", "")
                 meta = v.get("metadata", {})
-                doc_id = meta.get("doc_id", "")
+                # Fallback: parse doc_id from key "docs/filename.pdf::chunk_N"
+                doc_id = meta.get("doc_id") or (key.split("::")[0] if "::" in key else key)
+                doc_name = meta.get("doc_name") or doc_id.split("/")[-1]
                 if not doc_id:
                     continue
                 if doc_id not in docs:
-                    docs[doc_id] = {
-                        "name": meta.get("doc_name", doc_id),
-                        "chunks": 0,
-                        "pages": set()
-                    }
+                    docs[doc_id] = {"name": doc_name, "chunks": 0, "pages": set()}
                 docs[doc_id]["chunks"] += 1
                 docs[doc_id]["pages"].add(meta.get("page", "0"))
             next_token = resp.get("nextToken")
