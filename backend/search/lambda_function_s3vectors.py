@@ -84,6 +84,12 @@ def lambda_handler(event, context):
 
     # 4. Generate answer with Claude
     answer = generate_answer(question, context_text)
+    # Strip common preamble phrases Claude adds despite instructions
+    import re
+    answer = re.sub(
+        r'^(According to (the )?HR [Pp]olicy( [Mm]anual( \d+)?)?[:\s,]*|Based on (the )?(provided |HR )?[Pp]olicy [Dd]ocument[s]?[:\s,]*)',
+        '', answer, flags=re.IGNORECASE
+    ).lstrip()
 
     print(f"Answer generated. Sources: {[s['doc_name'] for s in sources]}")
     return resp(200, {
