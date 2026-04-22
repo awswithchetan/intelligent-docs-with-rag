@@ -352,7 +352,7 @@ async function uploadFile(file) {
     setStatus(item, "done", "✓ Processing…");
 
     // Processing happens async via S3 trigger — show feedback after delay
-    setTimeout(() => setStatus(item, "done", "✓ Indexed"), 8000);
+    setTimeout(() => { setStatus(item, "done", "✓ Indexed"); loadDocs(); }, 8000);
   } catch (err) {
     setStatus(item, "error", "✗ Failed");
     console.error(err);
