@@ -17,13 +17,14 @@ VECTOR_BUCKET = "intelligent-docs-vectors"
 INDEX_NAME    = "hr-policy-index"
 CLAUDE_MODEL  = "anthropic.claude-3-haiku-20240307-v1:0"
 TITAN_MODEL   = "amazon.titan-embed-text-v2:0"
-TOP_K         = 8
+TOP_K         = 15
 
 SYSTEM_PROMPT = """You are an HR policy assistant. Answer employee questions directly and authoritatively.
 
 Rules:
-- NEVER use phrases like "based on the excerpts provided", "according to the documents", "based on the policy document excerpts provided", or any similar hedging language
+- NEVER use phrases like "based on the excerpts provided", "according to the documents", or any similar hedging language
 - Start your answer immediately with the actual information
+- When asked "what is X", first explain what X is in plain language synthesized from the context, then give the key rules/details
 - If the answer is not available, say only: "This is not covered in the policy documents."
 - Cite only the single most relevant page number inline, e.g. (Page 79). Do not list multiple references at the end.
 - Use bullet points for lists
