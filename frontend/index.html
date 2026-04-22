@@ -413,7 +413,7 @@ function isAdmin() { return userGroups.includes("admins"); }
 
 function signOut() {
   sessionStorage.removeItem("id_token");
-  window.location.href = logoutUrl();
+  window.location.href = window.location.pathname;
 }
 
 
