@@ -411,11 +411,17 @@ async function initAuth() {
 
 function isAdmin() { return userGroups.includes("admins"); }
 
+function signOut() {
+  sessionStorage.removeItem("id_token");
+  window.location.href = logoutUrl();
+}
+
+
 function renderAuthState() {
   const navRight = document.querySelector(".nav-right");
   if (authToken) {
     const role = isAdmin() ? "👑 Admin" : "👤 Employee";
-    navRight.innerHTML = `<span style="color:white;font-size:0.85rem;margin-right:12px">${role} · ${escHtml(userEmail)}</span><a href="${logoutUrl()}">Sign Out</a>`;
+    navRight.innerHTML = `<span style="color:white;font-size:0.85rem;margin-right:12px">${role} · ${escHtml(userEmail)}</span><a href="#" onclick="signOut()">Sign Out</a>`;
     document.getElementById("tab-upload").style.display = isAdmin() ? "" : "none";
     if (!isAdmin()) switchTab("docs");
   } else {
