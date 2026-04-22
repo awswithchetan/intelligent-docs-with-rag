@@ -133,7 +133,7 @@ def resp(status_code: int, body: dict) -> dict:
         "headers": {
             "Content-Type"                : "application/json",
             "Access-Control-Allow-Origin" : "*",
-            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Allow-Headers": "Content-Type,Authorization",
             "Access-Control-Allow-Methods": "POST, OPTIONS"
         },
         "body": json.dumps(body)
