@@ -321,7 +321,7 @@
 
     <div class="chat-messages" id="chat-messages">
       <div class="welcome" id="welcome">
-        <div class="welcome-icon">👩‍💼</div>
+        <div class="welcome-icon">🧑‍💻</div>
         <h2>Ask about HR Policies</h2>
         <p>Upload policy documents on the left, then ask any question about them.</p>
       </div>
@@ -572,7 +572,7 @@ function appendMessage(role, text, sources) {
   const wrap = document.createElement("div");
   wrap.className = `message ${role}`;
 
-  const avatar = role === "user" ? "👤" : "👩‍💼";
+  const avatar = role === "user" ? "👤" : "🧑‍💻";
   let sourcesHtml = "";
 
   wrap.innerHTML = `
@@ -587,7 +587,7 @@ function appendMessage(role, text, sources) {
 function appendTyping() {
   const wrap = document.createElement("div");
   wrap.className = "message assistant";
-  wrap.innerHTML = `<div class="msg-avatar">👩‍💼</div><div class="msg-bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  wrap.innerHTML = `<div class="msg-avatar">🧑‍💻</div><div class="msg-bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
   document.getElementById("chat-messages").appendChild(wrap);
   wrap.scrollIntoView({behavior: "smooth", block: "end"});
   return wrap;
