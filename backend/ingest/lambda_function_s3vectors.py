@@ -121,9 +121,9 @@ def delete_vectors_for_doc(doc_id):
         response = s3vectors.query_vectors(
             vectorBucketName=VECTOR_BUCKET,
             indexName=INDEX_NAME,
-            queryVector={"float32": [0.0] * 512},  # dummy vector
-            topK=2000,  # max per query
-            metadataFilter={"doc_id": {"eq": doc_id}}
+            queryVector={"float32": [0.0] * 512},
+            topK=2000,
+            filter={"doc_id": {"eq": doc_id}}
         )
         
         keys_to_delete = [v["key"] for v in response.get("vectors", [])]
