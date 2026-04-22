@@ -300,7 +300,87 @@
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 const API_BASE = "https://bj5vhz01z2.execute-api.ap-south-1.amazonaws.com/prod";
+const COGNITO = {
+  domain:   "https://intelligent-docs-auth.auth.ap-south-1.amazoncognito.com",
+  clientId: "7fsr7mkpsgci61gf0ickos0k95",
+  redirect: window.location.origin + window.location.pathname
+};
 // ─────────────────────────────────────────────────────────────────────────────
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+let authToken = null;
+let userGroups = [];
+let userEmail  = "";
+
+function loginUrl() {
+  return `${COGNITO.domain}/login?client_id=${COGNITO.clientId}&response_type=code&scope=openid+email+profile&redirect_uri=${encodeURIComponent(COGNITO.redirect)}`;
+}
+function logoutUrl() {
+  return `${COGNITO.domain}/logout?client_id=${COGNITO.clientId}&logout_uri=${encodeURIComponent(COGNITO.redirect)}`;
+}
+
+async function exchangeCode(code) {
+  const res = await fetch(`${COGNITO.domain}/oauth2/token`, {
+    method: "POST",
+    headers: {"Content-Type": "application/x-www-form-urlencoded"},
+    body: new URLSearchParams({
+      grant_type: "authorization_code", client_id: COGNITO.clientId,
+      code, redirect_uri: COGNITO.redirect
+    })
+  });
+  return res.json();
+}
+
+function parseJwt(token) {
+  try { return JSON.parse(atob(token.split(".")[1].replace(/-/g,"+").replace(/_/g,"/"))); }
+  catch { return {}; }
+}
+
+function apiFetch(url, opts = {}) {
+  opts.headers = {...(opts.headers || {}), "Authorization": authToken};
+  return fetch(url, opts);
+}
+
+async function initAuth() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get("code");
+  if (code) {
+    window.history.replaceState({}, "", window.location.pathname);
+    const tokens = await exchangeCode(code);
+    if (tokens.id_token) sessionStorage.setItem("id_token", tokens.id_token);
+  }
+  const token = sessionStorage.getItem("id_token");
+  if (token) {
+    const claims = parseJwt(token);
+    if (claims.exp && claims.exp * 1000 > Date.now()) {
+      authToken  = token;
+      userEmail  = claims.email || "";
+      userGroups = claims["cognito:groups"] || [];
+    } else {
+      sessionStorage.removeItem("id_token");
+    }
+  }
+  renderAuthState();
+}
+
+function isAdmin() { return userGroups.includes("admins"); }
+
+function renderAuthState() {
+  const navRight = document.querySelector(".nav-right");
+  if (authToken) {
+    const role = isAdmin() ? "👑 Admin" : "👤 Employee";
+    navRight.innerHTML = `<span style="color:white;font-size:0.85rem;margin-right:12px">${role} · ${escHtml(userEmail)}</span><a href="${logoutUrl()}">Sign Out</a>`;
+    document.getElementById("tab-upload").style.display = isAdmin() ? "" : "none";
+    if (!isAdmin()) switchTab("docs");
+  } else {
+    navRight.innerHTML = `<a href="${loginUrl()}">🔐 Sign In</a>`;
+    document.getElementById("tab-upload").style.display = "none";
+    document.querySelector(".chat-input-bar").style.display = "none";
+    document.querySelector(".docs-panel").classList.add("active");
+    document.querySelector(".upload-panel").classList.remove("active");
+    document.querySelector(".docs-panel").innerHTML = '<div class="no-docs" style="padding:2rem;text-align:center">Please sign in to continue.</div>';
+  }
+}
 
 if (API_BASE === "YOUR_API_URL") {
   document.getElementById("config-banner").style.display = "block";
@@ -340,7 +420,7 @@ async function uploadFile(file) {
   const item = addUploadItem(file.name);
   try {
     // 1. Get presigned URL
-    const res = await fetch(`${API_BASE}/upload-url`, {
+    const res = await apiFetch(`${API_BASE}/upload-url`, {
       method: "POST", headers: {"Content-Type": "application/json"},
       body: JSON.stringify({filename: file.name})
     });
@@ -375,7 +455,7 @@ function setStatus(item, cls, text) {
 // ── Docs list ─────────────────────────────────────────────────────────────────
 async function loadDocs() {
   try {
-    const res  = await fetch(`${API_BASE}/docs`);
+    const res  = await apiFetch(`${API_BASE}/docs`);
     const data = await res.json();
     const list = document.getElementById("docs-list");
     if (!data.docs || data.docs.length === 0) {
@@ -421,7 +501,7 @@ async function sendMessage() {
   const typingEl = appendTyping();
 
   try {
-    const res  = await fetch(`${API_BASE}/search`, {
+    const res  = await apiFetch(`${API_BASE}/search`, {
       method: "POST", headers: {"Content-Type": "application/json"},
       body: JSON.stringify({question})
     });
@@ -471,6 +551,9 @@ function escHtml(str) {
     .replace(/&/g,"&amp;").replace(/</g,"&lt;")
     .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
+
+// Initialise auth on page load
+initAuth();
 </script>
 </body>
 </html>
