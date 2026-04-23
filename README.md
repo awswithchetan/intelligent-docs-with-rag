@@ -348,6 +348,22 @@ This automatically creates the OPTIONS method with the correct headers.
 2. Click **Deploy**
 3. Note the **Invoke URL** — you'll need it for the frontend config
 
+**Validate the API (without auth):**
+
+Before adding Cognito, test that the Lambda integrations are working. At this point the methods have no authorizer, so you can call them directly:
+
+```bash
+# Should return {"docs": []} if no documents indexed yet
+curl https://YOUR_API_ID.execute-api.YOUR_REGION.amazonaws.com/demo/docs
+
+# Should return a presigned URL (upload Lambda working)
+curl -X POST https://YOUR_API_ID.execute-api.YOUR_REGION.amazonaws.com/demo/upload-url \
+  -H "Content-Type: application/json" \
+  -d '{"filename": "test.pdf"}'
+```
+
+If these return valid JSON responses, the Lambda integrations are working correctly. Proceed to add Cognito auth in the next steps.
+
 ---
 
 ### Step 8 — Cognito User Pool
@@ -461,44 +477,82 @@ Open `http://localhost:8080` in your browser.
 ## Usage
 
 1. Sign in with the **admin** account → go to the **Upload** tab → upload policy PDFs
-2. Wait ~30 seconds per document for indexing (watch the status change to ✓ Indexed)
+2. Wait ~30 seconds per document for indexing (status changes to "Indexed")
 3. Go to the **Documents** tab to verify indexed documents
 4. Ask questions in the **Chat** tab — answers are generated from the uploaded documents
-5. Sign in with the **employee** account → Upload tab is hidden, chat works normally
+5. Sign in with the **employee** account — Upload tab is hidden, chat works normally
 
 ---
 
 ## Troubleshooting
 
-**`AccessDeniedException` when invoking Bedrock models**
+**1. `AccessDeniedException` when invoking Bedrock models**
+
 The Lambda role is missing AWS Marketplace permissions required for Bedrock's auto-subscription. Ensure the inline policy includes `aws-marketplace:Subscribe`, `aws-marketplace:Unsubscribe`, and `aws-marketplace:ViewSubscriptions`. It can take up to 2 minutes after adding permissions for the subscription to complete.
 
-**`ValidationException: Invocation of model ID ... with on-demand throughput isn't supported`**
+**2. `ValidationException: Invocation of model ID ... with on-demand throughput isn't supported`**
+
 You're using a direct model ID for a newer Claude model. Use the cross-region inference profile ID instead — prefix the model ID with `us.` (e.g. `us.anthropic.claude-3-5-haiku-20241022-v1:0`).
 
-**PDF uploaded but not indexed / no chunks appear**
+**3. PDF uploaded but not indexed / no chunks appear**
+
 Check CloudWatch Logs for the `intelligent-docs-ingest` function (Log groups → `/aws/lambda/intelligent-docs-ingest`). Common causes: wrong `DOCS_BUCKET` env var, missing S3 event trigger, or the pypdf layer not attached.
 
-**Search returns "No documents have been indexed yet"**
+**4. Search returns "No documents have been indexed yet"**
+
 Either no PDFs have been ingested, or the `VECTOR_BUCKET` / `VECTOR_INDEX` env vars on the search Lambda don't match what was created. Verify all Lambdas use the same values.
 
-**CORS error from API Gateway**
+**5. CORS error from API Gateway**
+
 Usually caused by the Lambda throwing an unhandled exception — API Gateway doesn't add CORS headers to error responses. Check CloudWatch Logs for the Lambda to find the real error.
 
-**S3 CORS error when uploading from the browser**
+**6. S3 CORS error when uploading from the browser**
+
 The browser upload goes directly to S3 via a presigned URL. Check that the CORS configuration is saved on the docs bucket and that `AllowedMethods` includes `PUT`.
 
-**API returns 401 Unauthorized**
+**7. API returns 401 Unauthorized**
+
 The Cognito authorizer is not attached to the method, or the API was not redeployed after attaching it. Confirm the authorizer is linked to each method, then redeploy to the `demo` stage.
 
-**Upload returns 403 / upload tab shows error**
+**8. Upload returns 403 / upload tab shows error**
+
 The logged-in user is not in the `admins` Cognito group. The upload Lambda checks for the `admins` group in the JWT claims. Verify the user is added to the `admins` group in Cognito.
 
-**Login page shows "Invalid request"**
+**9. Login page shows "Invalid request"**
+
 The OAuth scope or callback URL doesn't match. Ensure the App Client has `profile` scope enabled and the callback URL exactly matches the port you're serving the frontend on (including `http://` and no trailing path).
 
-**Login redirects to wrong URL / blank page after login**
+**10. Login redirects to wrong URL / blank page after login**
+
 The callback URL in the Cognito App Client must exactly match the URL you're serving the frontend on (including port). Update it under Cognito → App Client → Login pages.
 
-**Lambda times out during ingestion**
+**11. Lambda times out during ingestion**
+
 Large PDFs can exceed the default timeout. Ensure `intelligent-docs-ingest` timeout is set to 300s and memory to 512 MB.
+
+---
+
+## Cleanup
+
+To avoid ongoing charges, delete the following resources when done:
+
+**S3:**
+1. Empty and delete the `intelligent-docs-app` bucket (S3 Console → bucket → Empty → Delete)
+2. Delete all vectors in `intelligent-docs-vectors` → delete the vector index → delete the vector bucket
+
+**Lambda:**
+1. Delete all four Lambda functions: `intelligent-docs-ingest`, `intelligent-docs-search`, `intelligent-docs-list`, `intelligent-docs-upload`
+2. Delete the Lambda layer: `intelligent-docs-pypdf-layer`
+
+**IAM:**
+1. Delete the inline policy `intelligent-docs-lambda-policy` from the role
+2. Delete the role `intelligent-docs-lambda-role`
+
+**API Gateway:**
+1. Delete the `intelligent-docs-api` REST API
+
+**Cognito:**
+1. Delete the User Pool (this also deletes the App Client and all users)
+
+**CloudWatch:**
+1. Delete the log groups for each Lambda under `/aws/lambda/intelligent-docs-*` (optional — log storage cost is negligible)
