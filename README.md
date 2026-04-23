@@ -120,17 +120,23 @@ Replace `YOUR_REGION` and `ACCOUNT_ID` with your AWS region and account ID.
 
 The ingest Lambda requires `pypdf`. Package it as a Lambda Layer so all function code can be pasted inline — no zip uploads needed.
 
-On your local machine:
+On your local machine (or WSL terminal):
 ```bash
 mkdir -p python
 pip install pypdf==4.0.1 -t python/
 zip -r pypdf-layer.zip python/
 ```
 
-In the Lambda console → **Layers** → **Create layer**:
-- Name: `intelligent-docs-pypdf-layer`
-- Upload `pypdf-layer.zip`
-- Compatible runtime: Python 3.12
+Then create the layer via AWS CLI (no need to copy the zip anywhere):
+```bash
+aws lambda publish-layer-version \
+  --layer-name intelligent-docs-pypdf-layer \
+  --zip-file fileb://pypdf-layer.zip \
+  --compatible-runtimes python3.12 \
+  --region YOUR_REGION
+```
+
+Note the `LayerVersionArn` from the output — you'll need it when attaching the layer to the ingest Lambda.
 
 ### 5. Lambda Functions
 
