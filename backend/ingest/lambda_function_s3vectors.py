@@ -16,16 +16,16 @@ import re
 from datetime import datetime, timezone
 from io import BytesIO
 
-REGION        = os.environ.get("AWS_REGION", "ap-south-1")
+REGION        = os.environ.get("AWS_REGION", "us-east-1")
 
 s3         = boto3.client("s3", region_name=REGION)
 bedrock    = boto3.client("bedrock-runtime", region_name=REGION)
 s3vectors  = boto3.client("s3vectors", region_name=REGION)
 
 BUCKET          = os.environ["DOCS_BUCKET"]
-VECTOR_BUCKET   = os.environ.get("VECTOR_BUCKET", "intelligent-docs-vectors")
-INDEX_NAME      = os.environ.get("VECTOR_INDEX", "intelligent-docs-hr-policy-index")
-TITAN_MODEL     = os.environ.get("EMBED_MODEL", "amazon.titan-embed-text-v2:0")
+VECTOR_BUCKET   = os.environ["VECTOR_BUCKET"]
+INDEX_NAME      = os.environ["VECTOR_INDEX"]
+TITAN_MODEL     = os.environ["EMBED_MODEL"]
 CHUNK_SIZE      = int(os.environ.get("CHUNK_SIZE", "200"))
 CHUNK_OVERLAP   = int(os.environ.get("CHUNK_OVERLAP", "20"))
 

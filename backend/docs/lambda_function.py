@@ -3,8 +3,8 @@ import boto3
 import os
 
 REGION        = os.environ.get("AWS_REGION", "us-east-1")
-VECTOR_BUCKET = os.environ.get("VECTOR_BUCKET", "intelligent-docs-vectors")
-INDEX_NAME    = os.environ.get("VECTOR_INDEX", "intelligent-docs-hr-policy-index")
+VECTOR_BUCKET = os.environ["VECTOR_BUCKET"]
+INDEX_NAME    = os.environ["VECTOR_INDEX"]
 
 s3vectors = boto3.client("s3vectors", region_name=REGION)
 
