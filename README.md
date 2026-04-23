@@ -39,7 +39,7 @@ S3 Vectors ◄──► Search Lambda ──► Bedrock Claude 3 Haiku (answer g
 
 Create a standard S3 bucket (e.g. `intelligent-docs-app`) in your chosen region.
 
-Add a CORS configuration to allow browser uploads:
+Add a CORS configuration to allow browser uploads via presigned URLs (the bucket itself remains private):
 ```json
 [{
   "AllowedHeaders": ["*"],
