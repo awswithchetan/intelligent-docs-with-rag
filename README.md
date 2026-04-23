@@ -58,9 +58,9 @@ In the S3 console, go to **Vector buckets** (left sidebar) → **Create vector b
 
 Inside the bucket, create a **vector index**:
 - Name: `intelligent-docs-hr-policy-index`
-- Dimension: `512`
-- Distance metric: `Cosine`
-- Non-filterable metadata key: `text`
+- Dimension: `512` (must match the embedding model output size — Titan Embed v2 produces 512-dimensional vectors)
+- Distance metric: `Cosine` (measures similarity by angle between vectors, best for text embeddings)
+- Non-filterable metadata key: `text` (stores the original chunk text alongside the vector for retrieval)
 
 ### 3. IAM Role for Lambda
 
