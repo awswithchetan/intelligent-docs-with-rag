@@ -159,14 +159,14 @@ Paste the code directly in the inline editor (no zip required).
 - **Add layer**: attach the `intelligent-docs-pypdf-layer` created above
 - Environment variables:
 
-| Key | Value |
-|-----|-------|
-| `DOCS_BUCKET` | `intelligent-docs-app` |
-| `VECTOR_BUCKET` | `intelligent-docs-vectors` |
-| `VECTOR_INDEX` | `intelligent-docs-hr-policy-index` |
-| `EMBED_MODEL` | `amazon.titan-embed-text-v2:0` |
-| `CHUNK_SIZE` | `200` |
-| `CHUNK_OVERLAP` | `20` |
+| Key | Value | Description |
+|-----|-------|-------------|
+| `DOCS_BUCKET` | `intelligent-docs-app` | S3 bucket where PDFs are stored |
+| `VECTOR_BUCKET` | `intelligent-docs-vectors` | S3 vector bucket for storing embeddings |
+| `VECTOR_INDEX` | `intelligent-docs-hr-policy-index` | Vector index to write chunks into |
+| `EMBED_MODEL` | `amazon.titan-embed-text-v2:0` | Bedrock model used to generate embeddings |
+| `CHUNK_SIZE` | `200` | Number of words per text chunk |
+| `CHUNK_OVERLAP` | `20` | Number of overlapping words between consecutive chunks |
 
 #### 5b. intelligent-docs-search
 - Handler: `lambda_function.lambda_handler`
@@ -174,13 +174,13 @@ Paste the code directly in the inline editor (no zip required).
 - Code: paste contents of `backend/search/lambda_function_s3vectors.py` as `lambda_function.py`
 - Environment variables:
 
-| Key | Value |
-|-----|-------|
-| `VECTOR_BUCKET` | `intelligent-docs-vectors` |
-| `VECTOR_INDEX` | `intelligent-docs-hr-policy-index` |
-| `EMBED_MODEL` | `amazon.titan-embed-text-v2:0` |
-| `LLM_MODEL` | `anthropic.claude-3-haiku-20240307-v1:0` |
-| `TOP_K` | `15` |
+| Key | Value | Description |
+|-----|-------|-------------|
+| `VECTOR_BUCKET` | `intelligent-docs-vectors` | S3 vector bucket to query |
+| `VECTOR_INDEX` | `intelligent-docs-hr-policy-index` | Vector index to search against |
+| `EMBED_MODEL` | `amazon.titan-embed-text-v2:0` | Bedrock model used to embed the user's question |
+| `LLM_MODEL` | `anthropic.claude-3-haiku-20240307-v1:0` | Bedrock model used to generate the answer |
+| `TOP_K` | `15` | Number of most similar chunks to retrieve from the index |
 
 #### 5c. intelligent-docs-list
 - Handler: `lambda_function.lambda_handler`
@@ -188,9 +188,9 @@ Paste the code directly in the inline editor (no zip required).
 - Code: paste contents of `backend/docs/lambda_function.py`
 - Environment variables:
 
-| Key | Value |
-|-----|-------|
-| `DOCS_BUCKET` | `intelligent-docs-app` |
+| Key | Value | Description |
+|-----|-------|-------------|
+| `DOCS_BUCKET` | `intelligent-docs-app` | S3 bucket to list documents from |
 
 #### 5d. intelligent-docs-upload
 - Handler: `docs_upload_url.lambda_handler`
@@ -198,9 +198,9 @@ Paste the code directly in the inline editor (no zip required).
 - Code: paste contents of `backend/upload_url/docs_upload_url.py` — save the file as **`docs_upload_url.py`** (not `lambda_function.py`)
 - Environment variables:
 
-| Key | Value |
-|-----|-------|
-| `DOCS_BUCKET` | `intelligent-docs-app` |
+| Key | Value | Description |
+|-----|-------|-------------|
+| `DOCS_BUCKET` | `intelligent-docs-app` | S3 bucket to generate the presigned upload URL for |
 
 ### 6. S3 Event Trigger
 
