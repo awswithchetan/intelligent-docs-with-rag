@@ -26,15 +26,17 @@ S3 Vectors ◄──► intelligent-docs-search ──► Bedrock Claude (answer
 
 ## Tech Stack
 
-| Component | Service |
-|-----------|---------|
-| Vector storage | Amazon S3 Vectors |
-| Embeddings | Amazon Titan Embed Text v2 (512d) |
-| Answer generation | Anthropic Claude 3.5 Haiku (via Bedrock) |
-| PDF processing | pypdf |
-| Auth | Amazon Cognito (Hosted UI, implicit flow) |
-| API | Amazon API Gateway (REST) + Lambda (Python 3.12) |
-| Document storage | Amazon S3 |
+| Component | Service | Estimated Cost |
+|-----------|---------|----------------|
+| Vector storage | Amazon S3 Vectors | ~$0.01/month (few MBs for sample docs) |
+| Embeddings | Amazon Titan Embed Text v2 (512d) | ~$0.00 (fractions of a cent for sample docs) |
+| Answer generation | Anthropic Claude 3.5 Haiku (via Bedrock) | ~$0.01–$0.05 per 100 questions |
+| PDF processing | pypdf | Free (runs inside Lambda) |
+| Auth | Amazon Cognito (Hosted UI, implicit flow) | Free (up to 50,000 MAUs) |
+| API | Amazon API Gateway (REST) + Lambda (Python 3.12) | Free tier covers typical demo usage |
+| Document storage | Amazon S3 | ~$0.00 (a few PDFs = negligible) |
+
+> **Total estimated cost for demo usage: < $1/month.** All services either fall within the AWS Free Tier or cost fractions of a cent at the scale of a few documents and occasional queries.
 
 ## Sample Documents
 
