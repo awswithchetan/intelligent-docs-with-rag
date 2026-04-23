@@ -328,3 +328,26 @@ Ready-to-use sample policy documents are in `sample-docs/`:
 3. Click the Documents tab to verify indexed documents
 4. Ask questions in the chat — answers are generated from the uploaded documents
 5. Sign in with an employee account → upload tab is hidden, queries work normally
+
+## Troubleshooting
+
+**`AccessDeniedException` when invoking Bedrock models**
+The Lambda role is missing AWS Marketplace permissions required for Bedrock's auto-subscription. Ensure the inline policy includes `aws-marketplace:Subscribe`, `aws-marketplace:Unsubscribe`, and `aws-marketplace:ViewSubscriptions`. It can take up to 2 minutes after adding permissions for the subscription to complete.
+
+**PDF uploaded but not indexed / no chunks appear**
+Check CloudWatch Logs for the `intelligent-docs-ingest` function (Log groups → `/aws/lambda/intelligent-docs-ingest`). Common causes: wrong `DOCS_BUCKET` env var, missing S3 event trigger, or the pypdf layer not attached.
+
+**Search returns "No documents have been indexed yet"**
+Either no PDFs have been ingested, or the `VECTOR_BUCKET` / `VECTOR_INDEX` env vars on the search Lambda don't match what was created. Verify both Lambdas use the same values.
+
+**S3 CORS error when uploading from the browser**
+The browser upload goes directly to S3 via a presigned URL. If you see a CORS error, check that the CORS configuration is saved on the `intelligent-docs-app` bucket and that `AllowedMethods` includes `PUT`.
+
+**API returns 401 Unauthorized**
+The Cognito authorizer is not attached, or the API was not redeployed after attaching it. In API Gateway → your API → Authorizers, confirm the authorizer is linked to each method, then redeploy to the `demo` stage.
+
+**Login redirects to wrong URL / blank page after login**
+The callback URL in the Cognito App Client must exactly match the URL you're serving the frontend on (including port). Update it under Cognito → App Client → Hosted UI settings.
+
+**Lambda times out during ingestion**
+Large PDFs with many pages can exceed the default timeout. Ensure `intelligent-docs-ingest` timeout is set to 300s and memory to 512 MB.
