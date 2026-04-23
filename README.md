@@ -207,29 +207,28 @@ Note the `LayerVersionArn` from the output — you'll need it when attaching the
 
 Create four Lambda functions. For each one:
 
-1. Go to **Lambda Console** → **Create function**
-2. **Author from scratch**
-3. **Runtime:** Python 3.12
-4. **Execution role:** Use existing role → `intelligent-docs-lambda-role`
+1. Go to **Lambda Console** → **Create function** → **Author from scratch**
+2. **Runtime:** Python 3.12
+3. **Execution role:** Use existing role → `intelligent-docs-lambda-role`
 
 After creating, paste the code in the inline editor and click **Deploy**.
 
 ---
 
-#### 5a. intelligent-docs-ingest
+#### 5.1 Create intelligent-docs-ingest
 
-| Setting | Value |
-|---------|-------|
-| Function name | `intelligent-docs-ingest` |
-| Handler | `lambda_function.lambda_handler` |
-| Timeout | 300 seconds |
-| Memory | 512 MB |
-| Code file | `backend/ingest/lambda_function_s3vectors.py` → paste as `lambda_function.py` |
+1. **Function name:** `intelligent-docs-ingest`
+2. **Handler:** `lambda_function.lambda_handler`
+3. **Timeout:** 300 seconds
+4. **Memory:** 512 MB
+5. **Code:** paste contents of `backend/ingest/lambda_function_s3vectors.py` as `lambda_function.py`
 
 **Attach the pypdf layer:**
+
 1. Scroll to **Layers** section → **Add a layer**
-2. Select **Custom layers** → choose `intelligent-docs-pypdf-layer` → version `1`
-3. Click **Add**
+2. **Layer source:** Custom layers
+3. **Layer:** `intelligent-docs-pypdf-layer` → version `1`
+4. Click **Add**
 
 **Environment variables** (Configuration → Environment variables → Edit):
 
@@ -244,15 +243,13 @@ After creating, paste the code in the inline editor and click **Deploy**.
 
 ---
 
-#### 5b. intelligent-docs-search
+#### 5.2 Create intelligent-docs-search
 
-| Setting | Value |
-|---------|-------|
-| Function name | `intelligent-docs-search` |
-| Handler | `lambda_function.lambda_handler` |
-| Timeout | 60 seconds |
-| Memory | 512 MB |
-| Code file | `backend/search/lambda_function_s3vectors.py` → paste as `lambda_function.py` |
+1. **Function name:** `intelligent-docs-search`
+2. **Handler:** `lambda_function.lambda_handler`
+3. **Timeout:** 60 seconds
+4. **Memory:** 512 MB
+5. **Code:** paste contents of `backend/search/lambda_function_s3vectors.py` as `lambda_function.py`
 
 **Environment variables:**
 
@@ -268,15 +265,13 @@ After creating, paste the code in the inline editor and click **Deploy**.
 
 ---
 
-#### 5c. intelligent-docs-list
+#### 5.3 Create intelligent-docs-list
 
-| Setting | Value |
-|---------|-------|
-| Function name | `intelligent-docs-list` |
-| Handler | `lambda_function.lambda_handler` |
-| Timeout | 30 seconds |
-| Memory | 256 MB |
-| Code file | `backend/docs/lambda_function.py` → paste as `lambda_function.py` |
+1. **Function name:** `intelligent-docs-list`
+2. **Handler:** `lambda_function.lambda_handler`
+3. **Timeout:** 30 seconds
+4. **Memory:** 256 MB
+5. **Code:** paste contents of `backend/docs/lambda_function.py` as `lambda_function.py`
 
 **Environment variables:**
 
@@ -288,15 +283,13 @@ After creating, paste the code in the inline editor and click **Deploy**.
 
 ---
 
-#### 5d. intelligent-docs-upload
+#### 5.4 Create intelligent-docs-upload
 
-| Setting | Value |
-|---------|-------|
-| Function name | `intelligent-docs-upload` |
-| Handler | `lambda_function.lambda_handler` |
-| Timeout | 15 seconds |
-| Memory | 256 MB |
-| Code file | `backend/upload_url/lambda_function.py` → paste as `lambda_function.py` |
+1. **Function name:** `intelligent-docs-upload`
+2. **Handler:** `lambda_function.lambda_handler`
+3. **Timeout:** 15 seconds
+4. **Memory:** 256 MB
+5. **Code:** paste contents of `backend/upload_url/lambda_function.py` as `lambda_function.py`
 
 **Environment variables:**
 
