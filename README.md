@@ -24,11 +24,12 @@ S3 Vectors ◄──► Search Lambda ──► Bedrock Claude 3 Haiku (answer g
 
 ## Prerequisites
 
-- AWS account with access to `ap-south-1` (Mumbai)
-- Bedrock model access enabled for:
+- AWS account with Bedrock model access enabled for:
   - `amazon.titan-embed-text-v2:0`
   - `anthropic.claude-3-haiku-20240307-v1:0`
 - AWS CLI configured locally
+
+> All steps below use `ap-south-1` (Mumbai) as an example. You can use any AWS region that supports Bedrock, S3 Vectors, and Cognito — just replace `ap-south-1` consistently throughout.
 
 ---
 
@@ -36,7 +37,7 @@ S3 Vectors ◄──► Search Lambda ──► Bedrock Claude 3 Haiku (answer g
 
 ### 1. S3 Bucket (document storage)
 
-Create a standard S3 bucket (e.g. `intelligent-docs-app`) in `ap-south-1`.
+Create a standard S3 bucket (e.g. `intelligent-docs-app`) in your chosen region.
 
 Add a CORS configuration to allow browser uploads:
 ```json
@@ -96,8 +97,8 @@ Add an inline policy with these permissions:
         "s3vectors:ListVectors"
       ],
       "Resource": [
-        "arn:aws:s3vectors:ap-south-1:ACCOUNT_ID:bucket/intelligent-docs-vectors",
-        "arn:aws:s3vectors:ap-south-1:ACCOUNT_ID:bucket/intelligent-docs-vectors/index/intelligent-docs-hr-policy-index"
+        "arn:aws:s3vectors:YOUR_REGION:ACCOUNT_ID:bucket/intelligent-docs-vectors",
+        "arn:aws:s3vectors:YOUR_REGION:ACCOUNT_ID:bucket/intelligent-docs-vectors/index/intelligent-docs-hr-policy-index"
       ]
     }
   ]
@@ -126,7 +127,7 @@ In the Lambda console → **Layers** → **Create layer**:
 
 Create four Lambda functions, all with:
 - Runtime: Python 3.12
-- Region: ap-south-1
+- Region: your chosen region
 - Role: `intelligent-docs-lambda-role`
 
 Paste the code directly in the inline editor (no zip required).
@@ -254,9 +255,9 @@ In Cognito → User Pool → Users, create:
 Edit `frontend/index.html` and update the config block at the top of the `<script>` section:
 
 ```javascript
-const API_BASE = "https://YOUR_API_ID.execute-api.ap-south-1.amazonaws.com/prod";
+const API_BASE = "https://YOUR_API_ID.execute-api.YOUR_REGION.amazonaws.com/prod";
 const COGNITO = {
-  domain:   "https://YOUR_DOMAIN.auth.ap-south-1.amazoncognito.com",
+  domain:   "https://YOUR_DOMAIN.auth.YOUR_REGION.amazoncognito.com",
   clientId: "YOUR_APP_CLIENT_ID",
   redirect: window.location.origin + window.location.pathname
 };
