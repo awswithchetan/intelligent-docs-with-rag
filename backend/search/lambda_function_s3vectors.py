@@ -85,7 +85,12 @@ def lambda_handler(event, context):
     context_text = "\n\n---\n\n".join(context_parts)
 
     # 4. Generate answer with Claude
-    answer = generate_answer(question, context_text)
+    try:
+        answer = generate_answer(question, context_text)
+    except Exception as e:
+        print(f"LLM error: {e}")
+        return resp(500, {"error": f"Answer generation failed: {str(e)}"})
+
     # Strip common preamble phrases Claude adds despite instructions
     import re
     answer = re.sub(

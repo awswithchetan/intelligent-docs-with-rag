@@ -191,7 +191,7 @@ Paste the code directly in the inline editor (no zip required).
 | `VECTOR_BUCKET` | `intelligent-docs-vectors` | S3 vector bucket to query |
 | `VECTOR_INDEX` | `intelligent-docs-hr-policy-index` | Vector index to search against |
 | `EMBED_MODEL` | `amazon.titan-embed-text-v2:0` | Bedrock model used to embed the user's question |
-| `LLM_MODEL` | `anthropic.claude-3-haiku-20240307-v1:0` | Bedrock model used to generate the answer |
+| `LLM_MODEL` | `anthropic.claude-3-5-haiku-20241022-v1:0` | Bedrock model used to generate the answer |
 | `TOP_K` | `15` | Number of most similar chunks to retrieve from the index |
 
 #### 5c. intelligent-docs-list
