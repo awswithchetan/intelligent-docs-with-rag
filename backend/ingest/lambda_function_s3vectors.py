@@ -117,28 +117,30 @@ def handle_delete(bucket, doc_id):
 
 
 def delete_vectors_for_doc(doc_id):
-    """Delete all vectors for a given doc_id by querying with metadata filter"""
-    # Query to find all vectors for this doc
+    """Delete all vectors for a given doc_id by paginating with topK=100"""
     try:
-        response = s3vectors.query_vectors(
-            vectorBucketName=VECTOR_BUCKET,
-            indexName=INDEX_NAME,
-            queryVector={"float32": [0.0] * 512},
-            topK=2000,
-            filter={"doc_id": {"eq": doc_id}}
-        )
-        
-        keys_to_delete = [v["key"] for v in response.get("vectors", [])]
-        
+        keys_to_delete = []
+        while True:
+            response = s3vectors.query_vectors(
+                vectorBucketName=VECTOR_BUCKET,
+                indexName=INDEX_NAME,
+                queryVector={"float32": [0.0] * 512},
+                topK=100,
+                filter={"doc_id": {"eq": doc_id}}
+            )
+            batch_keys = [v["key"] for v in response.get("vectors", [])]
+            if not batch_keys:
+                break
+            keys_to_delete.extend(batch_keys)
+            if len(batch_keys) < 100:
+                break
+
         if keys_to_delete:
-            # Delete in batches of 100
-            batch_size = 100
-            for i in range(0, len(keys_to_delete), batch_size):
-                batch = keys_to_delete[i:i+batch_size]
+            for i in range(0, len(keys_to_delete), 100):
                 s3vectors.delete_vectors(
                     vectorBucketName=VECTOR_BUCKET,
                     indexName=INDEX_NAME,
-                    keys=batch
+                    keys=keys_to_delete[i:i+100]
                 )
             print(f"Deleted {len(keys_to_delete)} vectors for {doc_id}")
     except Exception as e:
