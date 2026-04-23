@@ -346,10 +346,10 @@
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
-const API_BASE = "https://bj5vhz01z2.execute-api.ap-south-1.amazonaws.com/prod";
+const API_BASE = "https://6a42llosmb.execute-api.us-east-1.amazonaws.com/demo";
 const COGNITO = {
-  domain:   "https://intelligent-docs-auth.auth.ap-south-1.amazoncognito.com",
-  clientId: "7fsr7mkpsgci61gf0ickos0k95",
+  domain:   "https://us-east-12mxwrobqz.auth.us-east-1.amazoncognito.com",
+  clientId: "54jbi7m1k50e6eh0bth5hg61on",
   redirect: window.location.origin + window.location.pathname
 };
 // ─────────────────────────────────────────────────────────────────────────────
@@ -575,9 +575,10 @@ function appendMessage(role, text, sources) {
   const avatar = role === "user" ? "👤" : "🧑‍💻";
   let sourcesHtml = "";
 
+  const formatted = role === "assistant" ? renderMarkdown(text) : escHtml(text).replace(/\n/g, "<br>");
   wrap.innerHTML = `
     <div class="msg-avatar">${avatar}</div>
-    <div class="msg-bubble">${escHtml(text).replace(/\n/g, "<br>")}${sourcesHtml}</div>`;
+    <div class="msg-bubble">${formatted}${sourcesHtml}</div>`;
 
   document.getElementById("chat-messages").appendChild(wrap);
   wrap.scrollIntoView({behavior: "smooth", block: "end"});
@@ -596,6 +597,15 @@ function appendTyping() {
 function hideWelcome() {
   const w = document.getElementById("welcome");
   if (w) w.remove();
+}
+
+function renderMarkdown(text) {
+  return escHtml(text)
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g, "<em>$1</em>")
+    .replace(/^- (.+)$/gm, "<li>$1</li>")
+    .replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>")
+    .replace(/\n/g, "<br>");
 }
 
 function escHtml(str) {
