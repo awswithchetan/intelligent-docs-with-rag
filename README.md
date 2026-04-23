@@ -24,9 +24,12 @@ S3 Vectors ◄──► Search Lambda ──► Bedrock Claude 3 Haiku (answer g
 
 ## Prerequisites
 
-- AWS account with Bedrock model access enabled for:
-  - `amazon.titan-embed-text-v2:0`
-  - `anthropic.claude-3-haiku-20240307-v1:0`
+- AWS account
+- Bedrock model access enabled in your chosen region:
+  - Go to **AWS Console → Amazon Bedrock → Model access** → Request access for:
+    - `Amazon Titan Embed Text v2` (`amazon.titan-embed-text-v2:0`)
+    - `Anthropic Claude 3 Haiku` (`anthropic.claude-3-haiku-20240307-v1:0`)
+- Python 3 and `pip` installed locally (for building the Lambda layer)
 - AWS CLI configured locally
 
 > All steps below use `ap-south-1` (Mumbai) as an example. You can use any AWS region that supports Bedrock, S3 Vectors, and Cognito — just replace `ap-south-1` consistently throughout.
@@ -105,7 +108,7 @@ Add an inline policy with these permissions:
 }
 ```
 
-Replace `ACCOUNT_ID` with your AWS account ID.
+Replace `YOUR_REGION` and `ACCOUNT_ID` with your AWS region and account ID.
 
 ### 4. Lambda Layer (pypdf dependency)
 
@@ -175,7 +178,7 @@ Paste the code directly in the inline editor (no zip required).
 #### 5d. intelligent-docs-upload
 - Handler: `docs_upload_url.lambda_handler`
 - Timeout: 15s | Memory: 256 MB
-- Code: paste contents of `backend/upload_url/docs_upload_url.py`
+- Code: paste contents of `backend/upload_url/docs_upload_url.py` — save the file as **`docs_upload_url.py`** (not `lambda_function.py`)
 - Environment variables:
 
 | Key | Value |
@@ -192,7 +195,7 @@ On the `intelligent-docs-app` bucket, add an event notification:
 
 Grant S3 permission to invoke the Lambda (S3 will prompt for this in the console).
 
-### 6. API Gateway
+### 7. API Gateway
 
 Create a REST API named `intelligent-docs-api`.
 
@@ -215,7 +218,7 @@ Enable CORS on each Lambda integration response as well.
 
 Deploy the API to a stage named `demo`.
 
-### 7. Cognito User Pool
+### 8. Cognito User Pool
 
 Create a User Pool named `intelligent-docs-users`:
 - Sign-in: email
@@ -244,13 +247,13 @@ Attach this authorizer to the POST methods on `/upload-url`, `/search`, and GET 
 
 Redeploy the API after attaching the authorizer.
 
-### 8. Create Users
+### 9. Create Users
 
 In Cognito → User Pool → Users, create:
 - An admin user → add to `admins` group
 - An employee user → add to `employees` group
 
-### 9. Frontend Configuration
+### 10. Frontend Configuration
 
 Edit `frontend/index.html` and update the config block at the top of the `<script>` section:
 
@@ -263,7 +266,7 @@ const COGNITO = {
 };
 ```
 
-### 10. Run Locally
+### 11. Run Locally
 
 Serve `frontend/index.html` on the port you registered in Cognito (e.g. port 8081):
 
