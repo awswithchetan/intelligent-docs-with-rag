@@ -106,38 +106,82 @@ Add an inline policy with these permissions:
 
 Replace `ACCOUNT_ID` with your AWS account ID.
 
-### 4. Lambda Functions
+### 4. Lambda Layer (pypdf dependency)
+
+The ingest Lambda requires `pypdf`. Package it as a Lambda Layer so all function code can be pasted inline — no zip uploads needed.
+
+On your local machine:
+```bash
+mkdir -p python
+pip install pypdf==4.0.1 -t python/
+zip -r pypdf-layer.zip python/
+```
+
+In the Lambda console → **Layers** → **Create layer**:
+- Name: `pypdf-layer`
+- Upload `pypdf-layer.zip`
+- Compatible runtime: Python 3.12
+
+### 5. Lambda Functions
 
 Create four Lambda functions, all with:
 - Runtime: Python 3.12
 - Region: ap-south-1
 - Role: `intelligent-docs-lambda-role`
-- Environment variable: `DOCS_BUCKET = intelligent-docs-app`
 
-#### 4a. intelligent-docs-ingest
+Paste the code directly in the inline editor (no zip required).
+
+#### 5a. intelligent-docs-ingest
 - Handler: `lambda_function.lambda_handler`
 - Timeout: 300s | Memory: 512 MB
-- Code: `backend/ingest/lambda_function_s3vectors.py`
-- **Dependency**: `pypdf==4.0.1` must be bundled in the zip (install with `pip install pypdf -t .`)
+- Code: paste contents of `backend/ingest/lambda_function_s3vectors.py` as `lambda_function.py`
+- **Add layer**: attach the `pypdf-layer` created above
+- Environment variables:
 
-#### 4b. intelligent-docs-search
+| Key | Value |
+|-----|-------|
+| `DOCS_BUCKET` | `intelligent-docs-app` |
+| `VECTOR_BUCKET` | `intelligent-docs-vectors` |
+| `VECTOR_INDEX` | `hr-policy-index` |
+| `EMBED_MODEL` | `amazon.titan-embed-text-v2:0` |
+| `CHUNK_SIZE` | `200` |
+| `CHUNK_OVERLAP` | `20` |
+
+#### 5b. intelligent-docs-search
 - Handler: `lambda_function.lambda_handler`
 - Timeout: 60s | Memory: 512 MB
-- Code: `backend/search/lambda_function_s3vectors.py`
+- Code: paste contents of `backend/search/lambda_function_s3vectors.py` as `lambda_function.py`
+- Environment variables:
 
-#### 4c. intelligent-docs-list
+| Key | Value |
+|-----|-------|
+| `VECTOR_BUCKET` | `intelligent-docs-vectors` |
+| `VECTOR_INDEX` | `hr-policy-index` |
+| `EMBED_MODEL` | `amazon.titan-embed-text-v2:0` |
+| `LLM_MODEL` | `anthropic.claude-3-haiku-20240307-v1:0` |
+| `TOP_K` | `15` |
+
+#### 5c. intelligent-docs-list
 - Handler: `lambda_function.lambda_handler`
 - Timeout: 30s | Memory: 256 MB
-- Code: `backend/docs/lambda_function.py`
+- Code: paste contents of `backend/docs/lambda_function.py`
+- Environment variables:
 
-#### 4d. intelligent-docs-upload-url
+| Key | Value |
+|-----|-------|
+| `DOCS_BUCKET` | `intelligent-docs-app` |
+
+#### 5d. intelligent-docs-upload-url
 - Handler: `docs_upload_url.lambda_handler`
 - Timeout: 15s | Memory: 256 MB
-- Code: `backend/upload_url/docs_upload_url.py` (see note below)
+- Code: paste contents of `backend/upload_url/docs_upload_url.py`
+- Environment variables:
 
-> **Packaging ingest Lambda**: Run `pip install pypdf==4.0.1 -t ./package`, copy `lambda_function_s3vectors.py` into `./package` as `lambda_function.py`, then zip the entire `package/` directory.
+| Key | Value |
+|-----|-------|
+| `DOCS_BUCKET` | `intelligent-docs-app` |
 
-### 5. S3 Event Trigger
+### 6. S3 Event Trigger
 
 On the `intelligent-docs-app` bucket, add an event notification:
 - Event types: `s3:ObjectCreated:*` and `s3:ObjectRemoved:*`

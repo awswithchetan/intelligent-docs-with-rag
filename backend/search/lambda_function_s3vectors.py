@@ -10,14 +10,16 @@ import json
 import boto3
 import os
 
-bedrock   = boto3.client("bedrock-runtime", region_name="ap-south-1")
-s3vectors = boto3.client("s3vectors", region_name="ap-south-1")
+REGION        = os.environ.get("AWS_REGION", "ap-south-1")
 
-VECTOR_BUCKET = "intelligent-docs-vectors"
-INDEX_NAME    = "hr-policy-index"
-CLAUDE_MODEL  = "anthropic.claude-3-haiku-20240307-v1:0"
-TITAN_MODEL   = "amazon.titan-embed-text-v2:0"
-TOP_K         = 15
+bedrock   = boto3.client("bedrock-runtime", region_name=REGION)
+s3vectors = boto3.client("s3vectors", region_name=REGION)
+
+VECTOR_BUCKET = os.environ.get("VECTOR_BUCKET", "intelligent-docs-vectors")
+INDEX_NAME    = os.environ.get("VECTOR_INDEX", "hr-policy-index")
+CLAUDE_MODEL  = os.environ.get("LLM_MODEL", "anthropic.claude-3-haiku-20240307-v1:0")
+TITAN_MODEL   = os.environ.get("EMBED_MODEL", "amazon.titan-embed-text-v2:0")
+TOP_K         = int(os.environ.get("TOP_K", "15"))
 
 SYSTEM_PROMPT = """You are an HR policy assistant. Answer employee questions directly and authoritatively.
 

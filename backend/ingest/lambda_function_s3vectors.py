@@ -16,16 +16,18 @@ import re
 from datetime import datetime, timezone
 from io import BytesIO
 
-s3         = boto3.client("s3", region_name="ap-south-1")
-bedrock    = boto3.client("bedrock-runtime", region_name="ap-south-1")
-s3vectors  = boto3.client("s3vectors", region_name="ap-south-1")
+REGION        = os.environ.get("AWS_REGION", "ap-south-1")
+
+s3         = boto3.client("s3", region_name=REGION)
+bedrock    = boto3.client("bedrock-runtime", region_name=REGION)
+s3vectors  = boto3.client("s3vectors", region_name=REGION)
 
 BUCKET          = os.environ["DOCS_BUCKET"]
-VECTOR_BUCKET   = "intelligent-docs-vectors"
-INDEX_NAME      = "hr-policy-index"
-TITAN_MODEL     = "amazon.titan-embed-text-v2:0"
-CHUNK_SIZE      = 200   # words per chunk
-CHUNK_OVERLAP   = 20    # words overlap between chunks
+VECTOR_BUCKET   = os.environ.get("VECTOR_BUCKET", "intelligent-docs-vectors")
+INDEX_NAME      = os.environ.get("VECTOR_INDEX", "hr-policy-index")
+TITAN_MODEL     = os.environ.get("EMBED_MODEL", "amazon.titan-embed-text-v2:0")
+CHUNK_SIZE      = int(os.environ.get("CHUNK_SIZE", "200"))
+CHUNK_OVERLAP   = int(os.environ.get("CHUNK_OVERLAP", "20"))
 
 
 def lambda_handler(event, context):
