@@ -56,7 +56,7 @@ In the S3 console, go to **Vector buckets** (left sidebar) → **Create vector b
 - Encryption: SSE-S3
 
 Inside the bucket, create a **vector index**:
-- Name: `hr-policy-index`
+- Name: `intelligent-docs-hr-policy-index`
 - Dimension: `512`
 - Distance metric: `Cosine`
 - Non-filterable metadata key: `text`
@@ -97,7 +97,7 @@ Add an inline policy with these permissions:
       ],
       "Resource": [
         "arn:aws:s3vectors:ap-south-1:ACCOUNT_ID:bucket/intelligent-docs-vectors",
-        "arn:aws:s3vectors:ap-south-1:ACCOUNT_ID:bucket/intelligent-docs-vectors/index/hr-policy-index"
+        "arn:aws:s3vectors:ap-south-1:ACCOUNT_ID:bucket/intelligent-docs-vectors/index/intelligent-docs-hr-policy-index"
       ]
     }
   ]
@@ -118,7 +118,7 @@ zip -r pypdf-layer.zip python/
 ```
 
 In the Lambda console → **Layers** → **Create layer**:
-- Name: `pypdf-layer`
+- Name: `intelligent-docs-pypdf-layer`
 - Upload `pypdf-layer.zip`
 - Compatible runtime: Python 3.12
 
@@ -135,14 +135,14 @@ Paste the code directly in the inline editor (no zip required).
 - Handler: `lambda_function.lambda_handler`
 - Timeout: 300s | Memory: 512 MB
 - Code: paste contents of `backend/ingest/lambda_function_s3vectors.py` as `lambda_function.py`
-- **Add layer**: attach the `pypdf-layer` created above
+- **Add layer**: attach the `intelligent-docs-pypdf-layer` created above
 - Environment variables:
 
 | Key | Value |
 |-----|-------|
 | `DOCS_BUCKET` | `intelligent-docs-app` |
 | `VECTOR_BUCKET` | `intelligent-docs-vectors` |
-| `VECTOR_INDEX` | `hr-policy-index` |
+| `VECTOR_INDEX` | `intelligent-docs-hr-policy-index` |
 | `EMBED_MODEL` | `amazon.titan-embed-text-v2:0` |
 | `CHUNK_SIZE` | `200` |
 | `CHUNK_OVERLAP` | `20` |
@@ -156,7 +156,7 @@ Paste the code directly in the inline editor (no zip required).
 | Key | Value |
 |-----|-------|
 | `VECTOR_BUCKET` | `intelligent-docs-vectors` |
-| `VECTOR_INDEX` | `hr-policy-index` |
+| `VECTOR_INDEX` | `intelligent-docs-hr-policy-index` |
 | `EMBED_MODEL` | `amazon.titan-embed-text-v2:0` |
 | `LLM_MODEL` | `anthropic.claude-3-haiku-20240307-v1:0` |
 | `TOP_K` | `15` |

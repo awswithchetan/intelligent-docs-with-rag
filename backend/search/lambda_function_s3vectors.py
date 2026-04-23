@@ -16,7 +16,7 @@ bedrock   = boto3.client("bedrock-runtime", region_name=REGION)
 s3vectors = boto3.client("s3vectors", region_name=REGION)
 
 VECTOR_BUCKET = os.environ.get("VECTOR_BUCKET", "intelligent-docs-vectors")
-INDEX_NAME    = os.environ.get("VECTOR_INDEX", "hr-policy-index")
+INDEX_NAME    = os.environ.get("VECTOR_INDEX", "intelligent-docs-hr-policy-index")
 CLAUDE_MODEL  = os.environ.get("LLM_MODEL", "anthropic.claude-3-haiku-20240307-v1:0")
 TITAN_MODEL   = os.environ.get("EMBED_MODEL", "amazon.titan-embed-text-v2:0")
 TOP_K         = int(os.environ.get("TOP_K", "15"))
