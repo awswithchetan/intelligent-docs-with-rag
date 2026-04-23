@@ -2,6 +2,8 @@
 
 A serverless RAG (Retrieval-Augmented Generation) application that lets employees ask natural language questions about company HR policy documents. Built on AWS using Amazon Bedrock, S3 Vectors, and Cognito.
 
+---
+
 ## Architecture
 
 ```
@@ -9,17 +11,17 @@ Browser (localhost)
     │
     ├── Cognito Hosted UI (login)
     │
-    └── API Gateway
-            ├── POST /upload-url  → Lambda (presigned S3 URL) [admin only]
-            ├── GET  /docs        → Lambda (list indexed docs)
-            └── POST /search      → Lambda (RAG query)
+    └── API Gateway (REST)
+            ├── POST /upload-url  → Lambda: intelligent-docs-upload    [admin only]
+            ├── GET  /docs        → Lambda: intelligent-docs-list
+            └── POST /search      → Lambda: intelligent-docs-search
 
-S3 (docs/*.pdf) ──► S3 Event ──► Ingest Lambda
+S3 (docs/*.pdf) ──► S3 Event ──► Lambda: intelligent-docs-ingest
                                       ├── pypdf (text extraction)
                                       ├── Bedrock Titan Embed v2 (embeddings)
-                                      └── S3 Vectors (store)
+                                      └── S3 Vectors (store chunks)
 
-S3 Vectors ◄──► Search Lambda ──► Bedrock Claude 3 Haiku (answer generation)
+S3 Vectors ◄──► intelligent-docs-search ──► Bedrock Claude (answer generation)
 ```
 
 ## Tech Stack
@@ -28,18 +30,30 @@ S3 Vectors ◄──► Search Lambda ──► Bedrock Claude 3 Haiku (answer g
 |-----------|---------|
 | Vector storage | Amazon S3 Vectors |
 | Embeddings | Amazon Titan Embed Text v2 (512d) |
-| Answer generation | Anthropic Claude 3 Haiku (via Bedrock) |
+| Answer generation | Anthropic Claude 3.5 Haiku (via Bedrock) |
 | PDF processing | pypdf |
-| Auth | Amazon Cognito (hosted UI, implicit flow) |
-| API | Amazon API Gateway + Lambda (Python 3.12) |
+| Auth | Amazon Cognito (Hosted UI, implicit flow) |
+| API | Amazon API Gateway (REST) + Lambda (Python 3.12) |
 | Document storage | Amazon S3 |
+
+## Sample Documents
+
+Ready-to-use sample HR policy documents are in `sample-docs/`:
+- `Employee_Handbook.pdf`
+- `Leave_Policy.pdf`
+- `WFH_Policy.pdf`
+- `IT_Security_Policy.pdf`
+- `Code_of_Conduct.pdf`
+- `New_Joiner_Onboarding.pdf`
+
+---
 
 ## Prerequisites
 
 - AWS account
-- Bedrock model access: as of late 2025, all serverless models are **automatically enabled** — no manual activation needed
-- Python 3 and `pip` installed locally (for building the Lambda layer)
 - AWS CLI configured locally
+- Python 3 and `pip` installed locally (for building the Lambda layer)
+- Bedrock model access: as of late 2025, all serverless models are **automatically enabled** — no manual activation needed
 
 > All steps below use `ap-south-1` (Mumbai) as an example. You can use any AWS region that supports Bedrock, S3 Vectors, and Cognito — just replace `ap-south-1` consistently throughout.
 
@@ -47,11 +61,18 @@ S3 Vectors ◄──► Search Lambda ──► Bedrock Claude 3 Haiku (answer g
 
 ## Deployment Steps
 
-### 1. S3 Bucket (document storage)
+### Step 1 — S3 Bucket (document storage)
 
-Create a standard S3 bucket (e.g. `intelligent-docs-app`) in your chosen region.
+1. Go to **S3 Console** → **Create bucket**
+2. **Bucket name:** `intelligent-docs-app` (or your preferred name)
+3. **Region:** your chosen region
+4. Leave all other settings as default → **Create bucket**
 
-Add a CORS configuration to allow browser uploads via presigned URLs (the bucket itself remains private):
+**Add CORS configuration** to allow browser uploads via presigned URLs (the bucket itself remains private):
+
+1. Open the bucket → **Permissions** tab → **Cross-origin resource sharing (CORS)** → **Edit**
+2. Paste the following and save:
+
 ```json
 [{
   "AllowedHeaders": ["*"],
@@ -61,27 +82,44 @@ Add a CORS configuration to allow browser uploads via presigned URLs (the bucket
 }]
 ```
 
-### 2. S3 Vector Bucket & Index
+---
 
-In the S3 console, go to **Vector buckets** (left sidebar) → **Create vector bucket**.
+### Step 2 — S3 Vector Bucket & Index
 
-- Name: `intelligent-docs-vectors`
-- Encryption: SSE-S3
+1. Go to **S3 Console** → **Vector buckets** (left sidebar) → **Create vector bucket**
+2. **Name:** `intelligent-docs-vectors`
+3. **Encryption:** SSE-S3
+4. Click **Create vector bucket**
 
-Inside the bucket, create a **vector index**:
-- Name: `intelligent-docs-hr-policy-index`
-- Dimension: `512` (must match the embedding model output size — Titan Embed v2 produces 512-dimensional vectors)
-- Distance metric: `Cosine` (measures similarity by angle between vectors, best for text embeddings)
-- Non-filterable metadata key: `text` (stores the original chunk text alongside the vector for retrieval)
+**Create a vector index inside the bucket:**
 
-### 3. IAM Role for Lambda
+1. Click on `intelligent-docs-vectors` → **Create index**
+2. Configure:
+   - **Name:** `intelligent-docs-hr-policy-index`
+   - **Dimension:** `512` (must match the embedding model — Titan Embed v2 produces 512-dimensional vectors)
+   - **Distance metric:** `Cosine` (measures similarity by angle between vectors, best for text embeddings)
+   - **Non-filterable metadata key:** `text` (stores the original chunk text alongside the vector for retrieval)
+3. Click **Create index**
 
-Create an IAM role named `intelligent-docs-lambda-role` with trust policy for `lambda.amazonaws.com`.
+---
 
-Attach the following managed policies:
-- `AWSLambdaBasicExecutionRole`
+### Step 3 — IAM Role for Lambda
 
-Add an inline policy with these permissions:
+1. Go to **IAM Console** → **Roles** → **Create role**
+2. **Trusted entity:** AWS service → **Lambda**
+3. **Role name:** `intelligent-docs-lambda-role`
+4. Click **Create role**
+
+**Attach managed policy:**
+
+1. Open the role → **Permissions** tab → **Add permissions** → **Attach policies**
+2. Search and attach: `AWSLambdaBasicExecutionRole`
+
+**Add inline policy:**
+
+1. **Add permissions** → **Create inline policy** → **JSON** tab
+2. Paste the following (replace placeholders with your actual values):
+
 ```json
 {
   "Version": "2012-10-17",
@@ -128,18 +166,24 @@ Add an inline policy with these permissions:
 
 Replace `<docs-bucket-name>`, `<vector-bucket-name>`, `<vector-index-name>`, `<region>`, and `<account-id>` with your actual values.
 
-### 4. Lambda Layer (pypdf dependency)
+3. **Policy name:** `intelligent-docs-lambda-policy` → **Create policy**
+
+---
+
+### Step 4 — Lambda Layer (pypdf dependency)
 
 The ingest Lambda requires `pypdf`. Package it as a Lambda Layer so all function code can be pasted inline — no zip uploads needed.
 
-On your local machine (or WSL terminal):
+**Build the layer package** on your local machine (or WSL terminal):
+
 ```bash
 mkdir -p python
 pip install pypdf==4.0.1 -t python/
 zip -r pypdf-layer.zip python/
 ```
 
-Then create the layer via AWS CLI (no need to copy the zip anywhere):
+**Create the layer via AWS CLI** (recommended — works directly from WSL without copying files):
+
 ```bash
 aws lambda publish-layer-version \
   --layer-name intelligent-docs-pypdf-layer \
@@ -150,26 +194,42 @@ aws lambda publish-layer-version \
 
 Note the `LayerVersionArn` from the output — you'll need it when attaching the layer to the ingest Lambda.
 
-Alternatively, via the Lambda console → **Layers** → **Create layer**:
+**Alternatively, via the Lambda console** → **Layers** → **Create layer**:
 - Name: `intelligent-docs-pypdf-layer`
 - Upload `pypdf-layer.zip`
 - Compatible runtime: Python 3.12
 
-### 5. Lambda Functions
+---
 
-Create four Lambda functions, all with:
-- Runtime: Python 3.12
-- Region: your chosen region
-- Role: `intelligent-docs-lambda-role`
+### Step 5 — Lambda Functions
 
-Paste the code directly in the inline editor (no zip required).
+Create four Lambda functions. For each one:
+
+1. Go to **Lambda Console** → **Create function**
+2. **Author from scratch**
+3. **Runtime:** Python 3.12
+4. **Execution role:** Use existing role → `intelligent-docs-lambda-role`
+
+After creating, paste the code in the inline editor and click **Deploy**.
+
+---
 
 #### 5a. intelligent-docs-ingest
-- Handler: `lambda_function.lambda_handler`
-- Timeout: 300s | Memory: 512 MB
-- Code: paste contents of `backend/ingest/lambda_function_s3vectors.py` as `lambda_function.py`
-- **Add layer**: attach the `intelligent-docs-pypdf-layer` created above
-- Environment variables:
+
+| Setting | Value |
+|---------|-------|
+| Function name | `intelligent-docs-ingest` |
+| Handler | `lambda_function.lambda_handler` |
+| Timeout | 300 seconds |
+| Memory | 512 MB |
+| Code file | `backend/ingest/lambda_function_s3vectors.py` → paste as `lambda_function.py` |
+
+**Attach the pypdf layer:**
+1. Scroll to **Layers** section → **Add a layer**
+2. Select **Custom layers** → choose `intelligent-docs-pypdf-layer` → version `1`
+3. Click **Add**
+
+**Environment variables** (Configuration → Environment variables → Edit):
 
 | Key | Value | Description |
 |-----|-------|-------------|
@@ -180,25 +240,43 @@ Paste the code directly in the inline editor (no zip required).
 | `CHUNK_SIZE` | `200` | Number of words per text chunk |
 | `CHUNK_OVERLAP` | `20` | Number of overlapping words between consecutive chunks |
 
+---
+
 #### 5b. intelligent-docs-search
-- Handler: `lambda_function.lambda_handler`
-- Timeout: 60s | Memory: 512 MB
-- Code: paste contents of `backend/search/lambda_function_s3vectors.py` as `lambda_function.py`
-- Environment variables:
+
+| Setting | Value |
+|---------|-------|
+| Function name | `intelligent-docs-search` |
+| Handler | `lambda_function.lambda_handler` |
+| Timeout | 60 seconds |
+| Memory | 512 MB |
+| Code file | `backend/search/lambda_function_s3vectors.py` → paste as `lambda_function.py` |
+
+**Environment variables:**
 
 | Key | Value | Description |
 |-----|-------|-------------|
 | `VECTOR_BUCKET` | `intelligent-docs-vectors` | S3 vector bucket to query |
 | `VECTOR_INDEX` | `intelligent-docs-hr-policy-index` | Vector index to search against |
 | `EMBED_MODEL` | `amazon.titan-embed-text-v2:0` | Bedrock model used to embed the user's question |
-| `LLM_MODEL` | `us.anthropic.claude-3-5-haiku-20241022-v1:0` | Bedrock model used to generate the answer |
+| `LLM_MODEL` | `us.anthropic.claude-3-5-haiku-20241022-v1:0` | Bedrock inference profile used to generate the answer |
 | `TOP_K` | `15` | Number of most similar chunks to retrieve from the index |
 
+> **Note on LLM_MODEL:** Use the cross-region inference profile ID (prefixed with `us.`) — direct model IDs are not supported for on-demand throughput for newer Claude models.
+
+---
+
 #### 5c. intelligent-docs-list
-- Handler: `lambda_function.lambda_handler`
-- Timeout: 30s | Memory: 256 MB
-- Code: paste contents of `backend/docs/lambda_function.py`
-- Environment variables:
+
+| Setting | Value |
+|---------|-------|
+| Function name | `intelligent-docs-list` |
+| Handler | `lambda_function.lambda_handler` |
+| Timeout | 30 seconds |
+| Memory | 256 MB |
+| Code file | `backend/docs/lambda_function.py` → paste as `lambda_function.py` |
+
+**Environment variables:**
 
 | Key | Value | Description |
 |-----|-------|-------------|
@@ -206,85 +284,149 @@ Paste the code directly in the inline editor (no zip required).
 | `VECTOR_BUCKET` | `intelligent-docs-vectors` | S3 vector bucket to list vectors from |
 | `VECTOR_INDEX` | `intelligent-docs-hr-policy-index` | Vector index to list documents from |
 
+---
+
 #### 5d. intelligent-docs-upload
-- Handler: `lambda_function.lambda_handler`
-- Timeout: 15s | Memory: 256 MB
-- Code: paste contents of `backend/upload_url/lambda_function.py` as `lambda_function.py`
-- Environment variables:
+
+| Setting | Value |
+|---------|-------|
+| Function name | `intelligent-docs-upload` |
+| Handler | `lambda_function.lambda_handler` |
+| Timeout | 15 seconds |
+| Memory | 256 MB |
+| Code file | `backend/upload_url/lambda_function.py` → paste as `lambda_function.py` |
+
+**Environment variables:**
 
 | Key | Value | Description |
 |-----|-------|-------------|
 | `DOCS_BUCKET` | `intelligent-docs-app` | S3 bucket to generate the presigned upload URL for |
 
-### 6. S3 Event Trigger
+---
 
-On the `intelligent-docs-app` bucket, add an event notification:
-- Event types: `s3:ObjectCreated:*` and `s3:ObjectRemoved:*`
-- Prefix filter: `docs/`
-- Suffix filter: `.pdf`
-- Destination: Lambda → `intelligent-docs-ingest`
+### Step 6 — S3 Event Trigger
 
-Grant S3 permission to invoke the Lambda (S3 will prompt for this in the console).
+1. Go to **S3 Console** → open `intelligent-docs-app` bucket
+2. **Properties** tab → **Event notifications** → **Create event notification**
+3. Configure:
+   - **Event name:** `intelligent-docs-ingest-trigger`
+   - **Prefix:** `docs/`
+   - **Suffix:** `.pdf`
+   - **Event types:** Check `s3:ObjectCreated:*` and `s3:ObjectRemoved:*`
+   - **Destination:** Lambda function → `intelligent-docs-ingest`
+4. Click **Save changes** (AWS will automatically add the required resource-based policy to the Lambda)
 
-### 7. API Gateway
+---
 
-Create a REST API named `intelligent-docs-api`.
+### Step 7 — API Gateway
 
-Create three resources and methods:
+1. Go to **API Gateway Console** → **Create API** → **REST API** → **Build**
+2. **API name:** `intelligent-docs-api`
+3. Click **Create API**
 
-| Resource | Method | Lambda | Auth |
-|----------|--------|--------|------|
-| `/upload-url` | POST | intelligent-docs-upload | Cognito |
-| `/search` | POST | intelligent-docs-search | Cognito |
-| `/docs` | GET | intelligent-docs-list | Cognito |
+**Create resources and methods:**
 
-For each resource, also add an `OPTIONS` method (for CORS) with:
-- Integration type: Mock
-- Response headers:
-  - `Access-Control-Allow-Origin: '*'`
-  - `Access-Control-Allow-Headers: 'Content-Type,Authorization'`
-  - `Access-Control-Allow-Methods: 'GET,POST,OPTIONS'`
+For each of the three routes below, create the resource and method:
 
-Enable CORS on each Lambda integration response as well.
+| Resource | Method | Lambda function |
+|----------|--------|-----------------|
+| `/upload-url` | POST | `intelligent-docs-upload` |
+| `/search` | POST | `intelligent-docs-search` |
+| `/docs` | GET | `intelligent-docs-list` |
 
-Deploy the API to a stage named `demo`.
+**For each method:**
+1. Select the resource → **Create method**
+2. **Method type:** POST (or GET for `/docs`)
+3. **Integration type:** Lambda function
+4. ✅ Check **Lambda proxy integration**
+5. **Lambda function:** select the corresponding function
+6. Click **Save**
 
-### 8. Cognito User Pool
+**Enable CORS on each resource:**
+1. Select the resource (e.g. `/upload-url`) → **Enable CORS**
+2. Leave defaults → **Save**
 
-Create a User Pool named `intelligent-docs-users`:
-- Sign-in: email
-- Password policy: min 8 chars, upper + lower + numbers
-- No MFA required (for demo)
+This automatically creates the OPTIONS method with the correct headers.
 
-Create two groups: `admins` and `employees`.
+**Deploy the API:**
+1. **Deploy API** → **New stage** → **Stage name:** `demo`
+2. Click **Deploy**
+3. Note the **Invoke URL** — you'll need it for the frontend config
 
-Create an App Client named `intelligent-docs-app`:
-- No client secret
-- OAuth flows: Authorization code grant + Implicit grant
-- OAuth scopes: `openid`, `email`, `profile`
-- Callback URLs: add your localhost URL (e.g. `http://localhost:8081`)
-- Logout URLs: same as callback URLs
+---
 
-Set up a Cognito domain (e.g. `intelligent-docs-auth`).
+### Step 8 — Cognito User Pool
 
-#### Add Cognito Authorizer to API Gateway
+1. Go to **Cognito Console** → **User pools** → **Create user pool**
 
-In API Gateway, create a Cognito authorizer:
-- Type: Cognito User Pools
-- User Pool: `intelligent-docs-users`
-- Token source: `method.request.header.Authorization`
+**Step through the wizard:**
 
-Attach this authorizer to the POST methods on `/upload-url`, `/search`, and GET on `/docs`.
+2. **Application type:** Single-page application (SPA)
+3. **App name:** `intelligent-docs-app`
+4. **Sign-in options:** Email
+5. **Return URL:** `http://localhost:8080` (or whatever port you'll serve the frontend on)
+6. Click **Create**
 
-Redeploy the API after attaching the authorizer.
+This creates both the User Pool and App Client in one step.
 
-### 9. Create Users
+**Note the following values** — you'll need them for the frontend config and API Gateway:
+- **User Pool ID** (e.g. `us-east-1_xxxxxxxxx`) — shown on the User Pool overview page
+- **App Client ID** — User Pool → **App clients** tab
+- **Cognito Domain** — User Pool → **Branding** → **Domain** (e.g. `https://xxxxx.auth.us-east-1.amazoncognito.com`)
 
-In Cognito → User Pool → Users, create:
-- An admin user → add to `admins` group
-- An employee user → add to `employees` group
+**Configure the App Client for Hosted UI:**
 
-### 10. Frontend Configuration
+1. User Pool → **App clients** → click your app client
+2. **Login pages** tab → **Edit**
+3. Under **OAuth 2.0 grant types**, enable:
+   - ✅ Authorization code grant
+   - ✅ Implicit grant
+4. Under **OpenID Connect scopes**, ensure these are selected:
+   - ✅ `openid`
+   - ✅ `email`
+   - ✅ `profile`
+5. **Allowed callback URLs:** `http://localhost:8080` (must exactly match the port you serve the frontend on)
+6. Click **Save changes**
+
+**Create user groups:**
+
+1. User Pool → **Groups** tab → **Create group**
+2. Create group: `admins`
+3. Create group: `employees`
+
+**Create users:**
+
+1. User Pool → **Users** tab → **Create user**
+2. Create an admin user (set a temporary password)
+3. Create an employee user
+4. Add the admin user to the `admins` group
+5. Add the employee user to the `employees` group
+
+---
+
+### Step 9 — Add Cognito Authorizer to API Gateway
+
+1. Go to **API Gateway Console** → `intelligent-docs-api` → **Authorizers** → **Create authorizer**
+2. Configure:
+   - **Name:** `intelligent-docs-cognito-auth`
+   - **Authorizer type:** Cognito
+   - **Cognito user pool:** `intelligent-docs-users`
+   - **Token source:** `Authorization`
+3. Click **Create authorizer**
+
+**Attach the authorizer to each method:**
+
+For each of the three methods (`POST /upload-url`, `POST /search`, `GET /docs`):
+1. Click the method → **Method request** → **Edit**
+2. **Authorization:** select `intelligent-docs-cognito-auth`
+3. Click **Save**
+
+**Redeploy the API:**
+1. **Deploy API** → select stage `demo` → **Deploy**
+
+---
+
+### Step 10 — Frontend Configuration
 
 Edit `frontend/index.html` and update the config block at the top of the `<script>` section:
 
@@ -297,59 +439,71 @@ const COGNITO = {
 };
 ```
 
-### 11. Run Locally
-
-Serve `frontend/index.html` on the port you registered in Cognito (e.g. port 8081):
-
-```bash
-# Python
-python3 -m http.server 8081 --directory frontend/
-
-# Node (npx)
-npx serve frontend/ -p 8081
-```
-
-Open `http://localhost:8081` in your browser.
+Replace:
+- `YOUR_API_ID` — from the API Gateway Invoke URL
+- `YOUR_REGION` — your AWS region (e.g. `us-east-1`)
+- `YOUR_DOMAIN` — your Cognito domain prefix
+- `YOUR_APP_CLIENT_ID` — from Cognito App Client
 
 ---
 
-## Sample Documents
+### Step 11 — Run Locally
 
-Ready-to-use sample policy documents are in `sample-docs/`:
-- `Employee_Handbook.pdf`
-- `Leave_Policy.pdf`
-- `WFH_Policy.pdf`
-- `IT_Security_Policy.pdf`
-- `Code_of_Conduct.pdf`
-- `New_Joiner_Onboarding.pdf`
+Serve `frontend/index.html` on the **same port** you registered as the Cognito callback URL:
+
+```bash
+# Python
+python3 -m http.server 8080 --directory frontend/
+
+# Node (npx)
+npx serve frontend/ -p 8080
+```
+
+Open `http://localhost:8080` in your browser.
+
+---
 
 ## Usage
 
-1. Sign in with an admin account → upload policy PDFs via the Upload tab
-2. Wait for "✓ Indexed" status (indexing takes ~30s per document)
-3. Click the Documents tab to verify indexed documents
-4. Ask questions in the chat — answers are generated from the uploaded documents
-5. Sign in with an employee account → upload tab is hidden, queries work normally
+1. Sign in with the **admin** account → go to the **Upload** tab → upload policy PDFs
+2. Wait ~30 seconds per document for indexing (watch the status change to ✓ Indexed)
+3. Go to the **Documents** tab to verify indexed documents
+4. Ask questions in the **Chat** tab — answers are generated from the uploaded documents
+5. Sign in with the **employee** account → Upload tab is hidden, chat works normally
+
+---
 
 ## Troubleshooting
 
 **`AccessDeniedException` when invoking Bedrock models**
 The Lambda role is missing AWS Marketplace permissions required for Bedrock's auto-subscription. Ensure the inline policy includes `aws-marketplace:Subscribe`, `aws-marketplace:Unsubscribe`, and `aws-marketplace:ViewSubscriptions`. It can take up to 2 minutes after adding permissions for the subscription to complete.
 
+**`ValidationException: Invocation of model ID ... with on-demand throughput isn't supported`**
+You're using a direct model ID for a newer Claude model. Use the cross-region inference profile ID instead — prefix the model ID with `us.` (e.g. `us.anthropic.claude-3-5-haiku-20241022-v1:0`).
+
 **PDF uploaded but not indexed / no chunks appear**
 Check CloudWatch Logs for the `intelligent-docs-ingest` function (Log groups → `/aws/lambda/intelligent-docs-ingest`). Common causes: wrong `DOCS_BUCKET` env var, missing S3 event trigger, or the pypdf layer not attached.
 
 **Search returns "No documents have been indexed yet"**
-Either no PDFs have been ingested, or the `VECTOR_BUCKET` / `VECTOR_INDEX` env vars on the search Lambda don't match what was created. Verify both Lambdas use the same values.
+Either no PDFs have been ingested, or the `VECTOR_BUCKET` / `VECTOR_INDEX` env vars on the search Lambda don't match what was created. Verify all Lambdas use the same values.
+
+**CORS error from API Gateway**
+Usually caused by the Lambda throwing an unhandled exception — API Gateway doesn't add CORS headers to error responses. Check CloudWatch Logs for the Lambda to find the real error.
 
 **S3 CORS error when uploading from the browser**
-The browser upload goes directly to S3 via a presigned URL. If you see a CORS error, check that the CORS configuration is saved on the `intelligent-docs-app` bucket and that `AllowedMethods` includes `PUT`.
+The browser upload goes directly to S3 via a presigned URL. Check that the CORS configuration is saved on the docs bucket and that `AllowedMethods` includes `PUT`.
 
 **API returns 401 Unauthorized**
-The Cognito authorizer is not attached, or the API was not redeployed after attaching it. In API Gateway → your API → Authorizers, confirm the authorizer is linked to each method, then redeploy to the `demo` stage.
+The Cognito authorizer is not attached to the method, or the API was not redeployed after attaching it. Confirm the authorizer is linked to each method, then redeploy to the `demo` stage.
+
+**Upload returns 403 / upload tab shows error**
+The logged-in user is not in the `admins` Cognito group. The upload Lambda checks for the `admins` group in the JWT claims. Verify the user is added to the `admins` group in Cognito.
+
+**Login page shows "Invalid request"**
+The OAuth scope or callback URL doesn't match. Ensure the App Client has `profile` scope enabled and the callback URL exactly matches the port you're serving the frontend on (including `http://` and no trailing path).
 
 **Login redirects to wrong URL / blank page after login**
-The callback URL in the Cognito App Client must exactly match the URL you're serving the frontend on (including port). Update it under Cognito → App Client → Hosted UI settings.
+The callback URL in the Cognito App Client must exactly match the URL you're serving the frontend on (including port). Update it under Cognito → App Client → Login pages.
 
 **Lambda times out during ingestion**
-Large PDFs with many pages can exceed the default timeout. Ensure `intelligent-docs-ingest` timeout is set to 300s and memory to 512 MB.
+Large PDFs can exceed the default timeout. Ensure `intelligent-docs-ingest` timeout is set to 300s and memory to 512 MB.
