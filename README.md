@@ -22,6 +22,18 @@ S3 (docs/*.pdf) ──► S3 Event ──► Ingest Lambda
 S3 Vectors ◄──► Search Lambda ──► Bedrock Claude 3 Haiku (answer generation)
 ```
 
+## Tech Stack
+
+| Component | Service |
+|-----------|---------|
+| Vector storage | Amazon S3 Vectors |
+| Embeddings | Amazon Titan Embed Text v2 (512d) |
+| Answer generation | Anthropic Claude 3 Haiku (via Bedrock) |
+| PDF processing | pypdf |
+| Auth | Amazon Cognito (hosted UI, implicit flow) |
+| API | Amazon API Gateway + Lambda (Python 3.12) |
+| Document storage | Amazon S3 |
+
 ## Prerequisites
 
 - AWS account
@@ -299,14 +311,6 @@ Open `http://localhost:8081` in your browser.
 
 ---
 
-## Usage
-
-1. Sign in with an admin account → upload policy PDFs via the Upload tab
-2. Wait for "✓ Indexed" status (indexing takes ~30s per document)
-3. Click the Documents tab to verify indexed documents
-4. Ask questions in the chat — answers are generated from the uploaded documents
-5. Sign in with an employee account → upload tab is hidden, queries work normally
-
 ## Sample Documents
 
 Ready-to-use sample policy documents are in `sample-docs/`:
@@ -317,14 +321,10 @@ Ready-to-use sample policy documents are in `sample-docs/`:
 - `Code_of_Conduct.pdf`
 - `New_Joiner_Onboarding.pdf`
 
-## Tech Stack
+## Usage
 
-| Component | Service |
-|-----------|---------|
-| Vector storage | Amazon S3 Vectors |
-| Embeddings | Amazon Titan Embed Text v2 (512d) |
-| Answer generation | Anthropic Claude 3 Haiku (via Bedrock) |
-| PDF processing | pypdf |
-| Auth | Amazon Cognito (hosted UI, implicit flow) |
-| API | Amazon API Gateway + Lambda (Python 3.12) |
-| Document storage | Amazon S3 |
+1. Sign in with an admin account → upload policy PDFs via the Upload tab
+2. Wait for "✓ Indexed" status (indexing takes ~30s per document)
+3. Click the Documents tab to verify indexed documents
+4. Ask questions in the chat — answers are generated from the uploaded documents
+5. Sign in with an employee account → upload tab is hidden, queries work normally
