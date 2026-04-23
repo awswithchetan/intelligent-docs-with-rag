@@ -1,10 +1,12 @@
 import json
 import boto3
+import os
 
-s3vectors = boto3.client("s3vectors", region_name="ap-south-1")
+REGION        = os.environ.get("AWS_REGION", "us-east-1")
+VECTOR_BUCKET = os.environ.get("VECTOR_BUCKET", "intelligent-docs-vectors")
+INDEX_NAME    = os.environ.get("VECTOR_INDEX", "intelligent-docs-hr-policy-index")
 
-VECTOR_BUCKET = "intelligent-docs-vectors"
-INDEX_NAME    = "hr-policy-index"
+s3vectors = boto3.client("s3vectors", region_name=REGION)
 
 
 def lambda_handler(event, context):

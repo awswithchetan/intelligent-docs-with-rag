@@ -203,6 +203,8 @@ Paste the code directly in the inline editor (no zip required).
 | Key | Value | Description |
 |-----|-------|-------------|
 | `DOCS_BUCKET` | `intelligent-docs-app` | S3 bucket to list documents from |
+| `VECTOR_BUCKET` | `intelligent-docs-vectors` | S3 vector bucket to list vectors from |
+| `VECTOR_INDEX` | `intelligent-docs-hr-policy-index` | Vector index to list documents from |
 
 #### 5d. intelligent-docs-upload
 - Handler: `lambda_function.lambda_handler`
