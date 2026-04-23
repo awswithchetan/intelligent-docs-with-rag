@@ -90,8 +90,8 @@ Add an inline policy with these permissions:
       "Effect": "Allow",
       "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket"],
       "Resource": [
-        "arn:aws:s3:::intelligent-docs-app",
-        "arn:aws:s3:::intelligent-docs-app/*"
+        "arn:aws:s3:::<docs-bucket-name>",
+        "arn:aws:s3:::<docs-bucket-name>/*"
       ]
     },
     {
@@ -118,15 +118,15 @@ Add an inline policy with these permissions:
         "s3vectors:ListVectors"
       ],
       "Resource": [
-        "arn:aws:s3vectors:YOUR_REGION:ACCOUNT_ID:bucket/intelligent-docs-vectors",
-        "arn:aws:s3vectors:YOUR_REGION:ACCOUNT_ID:bucket/intelligent-docs-vectors/index/intelligent-docs-hr-policy-index"
+        "arn:aws:s3vectors:<region>:<account-id>:bucket/<vector-bucket-name>",
+        "arn:aws:s3vectors:<region>:<account-id>:bucket/<vector-bucket-name>/index/<vector-index-name>"
       ]
     }
   ]
 }
 ```
 
-Replace `YOUR_REGION` and `ACCOUNT_ID` with your AWS region and account ID.
+Replace `<docs-bucket-name>`, `<vector-bucket-name>`, `<vector-index-name>`, `<region>`, and `<account-id>` with your actual values.
 
 ### 4. Lambda Layer (pypdf dependency)
 
