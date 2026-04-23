@@ -205,9 +205,9 @@ Paste the code directly in the inline editor (no zip required).
 | `DOCS_BUCKET` | `intelligent-docs-app` | S3 bucket to list documents from |
 
 #### 5d. intelligent-docs-upload
-- Handler: `docs_upload_url.lambda_handler`
+- Handler: `lambda_function.lambda_handler`
 - Timeout: 15s | Memory: 256 MB
-- Code: paste contents of `backend/upload_url/docs_upload_url.py` — save the file as **`docs_upload_url.py`** (not `lambda_function.py`)
+- Code: paste contents of `backend/upload_url/lambda_function.py` as `lambda_function.py`
 - Environment variables:
 
 | Key | Value | Description |
