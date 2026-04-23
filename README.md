@@ -25,10 +25,7 @@ S3 Vectors ◄──► Search Lambda ──► Bedrock Claude 3 Haiku (answer g
 ## Prerequisites
 
 - AWS account
-- Bedrock model access enabled in your chosen region:
-  - Go to **AWS Console → Amazon Bedrock → Model access** → Request access for:
-    - `Amazon Titan Embed Text v2` (`amazon.titan-embed-text-v2:0`)
-    - `Anthropic Claude 3 Haiku` (`anthropic.claude-3-haiku-20240307-v1:0`)
+- Bedrock model access: as of late 2025, all serverless models are **automatically enabled** — no manual activation needed
 - Python 3 and `pip` installed locally (for building the Lambda layer)
 - AWS CLI configured locally
 
@@ -88,6 +85,15 @@ Add an inline policy with these permissions:
     {
       "Effect": "Allow",
       "Action": ["bedrock:InvokeModel"],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "aws-marketplace:Subscribe",
+        "aws-marketplace:Unsubscribe",
+        "aws-marketplace:ViewSubscriptions"
+      ],
       "Resource": "*"
     },
     {
