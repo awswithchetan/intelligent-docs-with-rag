@@ -213,7 +213,7 @@ For each resource, also add an `OPTIONS` method (for CORS) with:
 
 Enable CORS on each Lambda integration response as well.
 
-Deploy the API to a stage named `prod`.
+Deploy the API to a stage named `demo`.
 
 ### 7. Cognito User Pool
 
@@ -255,7 +255,7 @@ In Cognito → User Pool → Users, create:
 Edit `frontend/index.html` and update the config block at the top of the `<script>` section:
 
 ```javascript
-const API_BASE = "https://YOUR_API_ID.execute-api.YOUR_REGION.amazonaws.com/prod";
+const API_BASE = "https://YOUR_API_ID.execute-api.YOUR_REGION.amazonaws.com/demo";
 const COGNITO = {
   domain:   "https://YOUR_DOMAIN.auth.YOUR_REGION.amazoncognito.com",
   clientId: "YOUR_APP_CLIENT_ID",
