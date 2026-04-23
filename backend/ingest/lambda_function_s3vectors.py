@@ -117,22 +117,20 @@ def handle_delete(bucket, doc_id):
 
 
 def delete_vectors_for_doc(doc_id):
-    """Delete all vectors for a given doc_id by paginating with topK=100"""
+    """Delete all vectors for a given doc_id using key prefix listing"""
     try:
         keys_to_delete = []
+        next_token = None
         while True:
-            response = s3vectors.query_vectors(
-                vectorBucketName=VECTOR_BUCKET,
-                indexName=INDEX_NAME,
-                queryVector={"float32": [0.0] * 512},
-                topK=100,
-                filter={"doc_id": {"eq": doc_id}}
-            )
-            batch_keys = [v["key"] for v in response.get("vectors", [])]
-            if not batch_keys:
-                break
-            keys_to_delete.extend(batch_keys)
-            if len(batch_keys) < 100:
+            kwargs = dict(vectorBucketName=VECTOR_BUCKET, indexName=INDEX_NAME, maxResults=100)
+            if next_token:
+                kwargs["nextToken"] = next_token
+            response = s3vectors.list_vectors(**kwargs)
+            for v in response.get("vectors", []):
+                if v["key"].startswith(f"{doc_id}::"):
+                    keys_to_delete.append(v["key"])
+            next_token = response.get("nextToken")
+            if not next_token:
                 break
 
         if keys_to_delete:
