@@ -171,7 +171,7 @@ Paste the code directly in the inline editor (no zip required).
 |-----|-------|
 | `DOCS_BUCKET` | `intelligent-docs-app` |
 
-#### 5d. intelligent-docs-upload-presign-url
+#### 5d. intelligent-docs-upload
 - Handler: `docs_upload_url.lambda_handler`
 - Timeout: 15s | Memory: 256 MB
 - Code: paste contents of `backend/upload_url/docs_upload_url.py`
@@ -199,7 +199,7 @@ Create three resources and methods:
 
 | Resource | Method | Lambda | Auth |
 |----------|--------|--------|------|
-| `/upload-url` | POST | intelligent-docs-upload-presign-url | Cognito |
+| `/upload-url` | POST | intelligent-docs-upload | Cognito |
 | `/search` | POST | intelligent-docs-search | Cognito |
 | `/docs` | GET | intelligent-docs-list | Cognito |
 
