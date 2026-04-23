@@ -138,6 +138,11 @@ aws lambda publish-layer-version \
 
 Note the `LayerVersionArn` from the output — you'll need it when attaching the layer to the ingest Lambda.
 
+Alternatively, via the Lambda console → **Layers** → **Create layer**:
+- Name: `intelligent-docs-pypdf-layer`
+- Upload `pypdf-layer.zip`
+- Compatible runtime: Python 3.12
+
 ### 5. Lambda Functions
 
 Create four Lambda functions, all with:
