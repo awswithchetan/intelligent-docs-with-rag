@@ -357,7 +357,7 @@ Create four Lambda functions with the following names:
 
 **Create resources and methods:**
 
-For each of the three routes below, create the resource and method:
+Create a resource and method for each of the three routes. Repeat the steps below for all three:
 
 | Resource | Method | Lambda function |
 |----------|--------|-----------------|
@@ -365,16 +365,16 @@ For each of the three routes below, create the resource and method:
 | `/search` | POST | `intelligent-docs-search` |
 | `/docs` | GET | `intelligent-docs-list` |
 
-**For each method:**
+**For each route:**
 1. Select the resource → **Create method**
 2. **Method type:** POST (or GET for `/docs`)
 3. **Integration type:** Lambda function
 4. ✅ Check **Lambda proxy integration**
-5. **Lambda function:** select the corresponding function
+5. **Lambda function:** select the corresponding function from the table above
 6. Click **Save**
 
-**Enable CORS on each resource:**
-1. Select the resource (e.g. `/upload-url`) → **Enable CORS**
+**Enable CORS on each resource** (repeat for all three):
+1. Select the resource → **Enable CORS**
 2. Leave defaults → **Save**
 
 This automatically creates the OPTIONS method with the correct headers.
@@ -386,7 +386,12 @@ This automatically creates the OPTIONS method with the correct headers.
 
 **Validate the API (without auth):**
 
-Before adding Cognito, test that the Lambda integrations are working. At this point the methods have no authorizer, so you can call them directly:
+Before adding Cognito, test that the Lambda integrations are working:
+
+| Route | Method | Test command |
+|-------|--------|--------------|
+| `/docs` | GET | `curl https://YOUR_API_ID.execute-api.YOUR_REGION.amazonaws.com/demo/docs` |
+| `/upload-url` | POST | `curl -X POST .../demo/upload-url -H "Content-Type: application/json" -d '{"filename":"test.pdf"}'` |
 
 ```bash
 # Should return {"docs": []} if no documents indexed yet
