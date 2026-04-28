@@ -234,7 +234,7 @@ Create four Lambda functions with the following names:
 3. **Runtime:** Python 3.14
 4. **Additional settings** → toggle **Custom execution role** → select `intelligent-docs-lambda-role`
 5. Click **Create function**
-6. Paste contents of `backend/ingest/lambda_function_s3vectors.py` as `lambda_function.py` → **Deploy**
+6. Paste contents of `backend/ingest/lambda_function.py` as `lambda_function.py` → **Deploy**
 
 **Configuration:**
 - **Handler:** `lambda_function.lambda_handler`
@@ -268,7 +268,7 @@ Create four Lambda functions with the following names:
 3. **Runtime:** Python 3.14
 4. **Additional settings** → toggle **Custom execution role** → select `intelligent-docs-lambda-role`
 5. Click **Create function**
-6. Paste contents of `backend/search/lambda_function_s3vectors.py` as `lambda_function.py` → **Deploy**
+6. Paste contents of `backend/search/lambda_function.py` as `lambda_function.py` → **Deploy**
 
 **Configuration:**
 - **Handler:** `lambda_function.lambda_handler`

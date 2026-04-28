@@ -1,12 +1,12 @@
 """
-Ingestion Lambda — Intelligent Docs RAG
+Ingestion Lambda — S3 Vectors version
 Triggered by S3 ObjectCreated and ObjectRemoved events on the docs/ prefix.
 
 Flow (upload):
-  PDF uploaded → extract text → chunk → embed each chunk → upsert into index.json
+  PDF uploaded → extract text → chunk → embed each chunk → put into S3 Vectors index
 
 Flow (delete):
-  PDF deleted → remove all chunks for that doc from index.json
+  PDF deleted → delete all vectors for that doc from S3 Vectors index
 """
 
 import json
@@ -16,14 +16,18 @@ import re
 from datetime import datetime, timezone
 from io import BytesIO
 
-s3      = boto3.client("s3", region_name="ap-south-1", endpoint_url="https://s3.ap-south-1.amazonaws.com")
-bedrock = boto3.client("bedrock-runtime", region_name="ap-south-1")
+REGION        = os.environ.get("AWS_REGION", "us-east-1")
 
-BUCKET       = os.environ["DOCS_BUCKET"]
-INDEX_KEY    = "index/index.json"
-TITAN_MODEL  = "amazon.titan-embed-text-v2:0"
-CHUNK_SIZE   = 200   # words per chunk
-CHUNK_OVERLAP = 20   # words overlap between chunks
+s3         = boto3.client("s3", region_name=REGION)
+bedrock    = boto3.client("bedrock-runtime", region_name=REGION)
+s3vectors  = boto3.client("s3vectors", region_name=REGION)
+
+BUCKET          = os.environ["DOCS_BUCKET"]
+VECTOR_BUCKET   = os.environ["VECTOR_BUCKET"]
+INDEX_NAME      = os.environ["VECTOR_INDEX"]
+TITAN_MODEL     = os.environ["EMBED_MODEL"]
+CHUNK_SIZE      = int(os.environ.get("CHUNK_SIZE", "200"))
+CHUNK_OVERLAP   = int(os.environ.get("CHUNK_OVERLAP", "20"))
 
 
 def lambda_handler(event, context):
@@ -64,47 +68,81 @@ def handle_upload(bucket, key, doc_id):
     chunks = chunk_pages(pages)
     print(f"Created {len(chunks)} chunks")
 
-    # 4. Embed each chunk
-    records = []
+    # 4. Embed each chunk and prepare vectors
+    vectors = []
     for i, chunk in enumerate(chunks):
         try:
             embedding = embed_text(chunk["text"])
         except Exception as e:
             print(f"  Skipping chunk {i+1}: {e}")
             continue
-        records.append({
-            "doc_id"    : doc_id,
-            "doc_name"  : doc_name,
-            "chunk_id"  : f"{doc_id}::chunk_{i}",
-            "text"      : chunk["text"],
-            "page"      : chunk["page"],
-            "embedding" : embedding,
-            "metadata"  : {
-                "uploaded_at": datetime.now(timezone.utc).isoformat(),
-                "chunk_index": i,
-                "total_chunks": len(chunks),
+        
+        vectors.append({
+            "key": f"{doc_id}::chunk_{i}",
+            "data": {"float32": embedding},
+            "metadata": {
+                "text": chunk["text"],  # non-filterable
+                "doc_id": doc_id,
+                "doc_name": doc_name,
+                "page": str(chunk["page"]),
+                "chunk_index": str(i),
+                "uploaded_at": datetime.now(timezone.utc).isoformat()
             }
         })
         print(f"  Embedded chunk {i+1}/{len(chunks)}")
 
-    # 5. Upsert into index (remove old chunks for this doc, add new ones)
-    index = load_index(bucket)
-    index = [r for r in index if r["doc_id"] != doc_id]  # remove old version
-    index.extend(records)
-    save_index(bucket, index)
+    # 5. Delete old vectors for this doc, then insert new ones
+    delete_vectors_for_doc(doc_id)
+    
+    # Insert in batches of 100
+    batch_size = 100
+    for i in range(0, len(vectors), batch_size):
+        batch = vectors[i:i+batch_size]
+        s3vectors.put_vectors(
+            vectorBucketName=VECTOR_BUCKET,
+            indexName=INDEX_NAME,
+            vectors=batch
+        )
+        print(f"  Inserted batch {i//batch_size + 1}/{(len(vectors)-1)//batch_size + 1}")
 
-    print(f"Index updated. Total chunks: {len(index)}, docs: {len(set(r['doc_id'] for r in index))}")
-    return {"status": "success", "doc_id": doc_id, "chunks": len(records)}
+    print(f"Indexed {len(vectors)} chunks for {doc_name}")
+    return {"status": "success", "doc_id": doc_id, "chunks": len(vectors)}
 
 
 def handle_delete(bucket, doc_id):
     print(f"Processing delete: {doc_id}")
-    index = load_index(bucket)
-    before = len(index)
-    index = [r for r in index if r["doc_id"] != doc_id]
-    save_index(bucket, index)
-    print(f"Removed {before - len(index)} chunks for {doc_id}")
+    delete_vectors_for_doc(doc_id)
+    print(f"Deleted all chunks for {doc_id}")
     return {"status": "deleted", "doc_id": doc_id}
+
+
+def delete_vectors_for_doc(doc_id):
+    """Delete all vectors for a given doc_id using key prefix listing"""
+    try:
+        keys_to_delete = []
+        next_token = None
+        while True:
+            kwargs = dict(vectorBucketName=VECTOR_BUCKET, indexName=INDEX_NAME, maxResults=100)
+            if next_token:
+                kwargs["nextToken"] = next_token
+            response = s3vectors.list_vectors(**kwargs)
+            for v in response.get("vectors", []):
+                if v["key"].startswith(f"{doc_id}::"):
+                    keys_to_delete.append(v["key"])
+            next_token = response.get("nextToken")
+            if not next_token:
+                break
+
+        if keys_to_delete:
+            for i in range(0, len(keys_to_delete), 100):
+                s3vectors.delete_vectors(
+                    vectorBucketName=VECTOR_BUCKET,
+                    indexName=INDEX_NAME,
+                    keys=keys_to_delete[i:i+100]
+                )
+            print(f"Deleted {len(keys_to_delete)} vectors for {doc_id}")
+    except Exception as e:
+        print(f"Error deleting vectors: {e}")
 
 
 # ── PDF text extraction ───────────────────────────────────────────────────────
@@ -131,7 +169,6 @@ def extract_text_from_pdf(pdf_bytes: bytes) -> list[dict]:
 def chunk_pages(pages: list[dict]) -> list[dict]:
     """Chunk pages into overlapping word windows, tracking source page."""
     chunks = []
-    # flatten all words with page tracking
     words_with_pages = []
     for p in pages:
         for word in p["text"].split():
@@ -145,9 +182,9 @@ def chunk_pages(pages: list[dict]) -> list[dict]:
         chunk_pages_set = [pg for _, pg in words_with_pages[start:end]]
         chunks.append({
             "text": " ".join(chunk_words),
-            "page": chunk_pages_set[0],  # starting page of chunk
+            "page": chunk_pages_set[0],
         })
-        start += CHUNK_SIZE - CHUNK_OVERLAP  # overlap
+        start += CHUNK_SIZE - CHUNK_OVERLAP
 
     return chunks
 
@@ -161,24 +198,3 @@ def embed_text(text: str) -> list[float]:
         accept="application/json", body=body
     )
     return json.loads(resp["body"].read())["embedding"]
-
-
-# ── Index helpers ─────────────────────────────────────────────────────────────
-
-def load_index(bucket: str) -> list:
-    try:
-        obj = s3.get_object(Bucket=bucket, Key=INDEX_KEY)
-        return json.loads(obj["Body"].read())
-    except s3.exceptions.NoSuchKey:
-        return []
-    except Exception as e:
-        print(f"Index load error: {e}")
-        return []
-
-
-def save_index(bucket: str, index: list):
-    s3.put_object(
-        Bucket=bucket, Key=INDEX_KEY,
-        Body=json.dumps(index),
-        ContentType="application/json"
-    )
