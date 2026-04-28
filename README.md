@@ -388,22 +388,18 @@ This automatically creates the OPTIONS method with the correct headers.
 
 Before adding Cognito, test that the Lambda integrations are working:
 
-| Route | Method | Test command |
-|-------|--------|--------------|
-| `/docs` | GET | `curl https://YOUR_API_ID.execute-api.YOUR_REGION.amazonaws.com/demo/docs` |
-| `/upload-url` | POST | `curl -X POST .../demo/upload-url -H "Content-Type: application/json" -d '{"filename":"test.pdf"}'` |
-
 ```bash
 # Should return {"docs": []} if no documents indexed yet
 curl https://YOUR_API_ID.execute-api.YOUR_REGION.amazonaws.com/demo/docs
 
 # Should return a presigned URL (upload Lambda working)
+# Note: /upload-url checks for admin group in JWT — it will return an auth error here, which is expected
 curl -X POST https://YOUR_API_ID.execute-api.YOUR_REGION.amazonaws.com/demo/upload-url \
   -H "Content-Type: application/json" \
   -d '{"filename": "test.pdf"}'
 ```
 
-If these return valid JSON responses, the Lambda integrations are working correctly. Proceed to add Cognito auth in the next steps.
+If `/docs` returns `{"docs": []}`, the Lambda integrations are working correctly. Proceed to add Cognito auth in the next steps.
 
 ---
 
