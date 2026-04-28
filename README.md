@@ -282,10 +282,10 @@ Create four Lambda functions with the following names:
 | `VECTOR_BUCKET` | `intelligent-docs-vectors` | S3 vector bucket to query |
 | `VECTOR_INDEX` | `intelligent-docs-hr-policy-index` | Vector index to search against |
 | `EMBED_MODEL` | `amazon.titan-embed-text-v2:0` | Bedrock model used to embed the user's question |
-| `LLM_MODEL` | `us.anthropic.claude-3-5-haiku-20241022-v1:0` | Bedrock inference profile used to generate the answer |
+| `LLM_MODEL` | `ap.anthropic.claude-3-5-haiku-20241022-v1:0` | Bedrock inference profile used to generate the answer |
 | `TOP_K` | `15` | Number of most similar chunks to retrieve from the index |
 
-> **Note on LLM_MODEL:** Use the cross-region inference profile ID (prefixed with `us.`) — direct model IDs are not supported for on-demand throughput for newer Claude models.
+> **Note on LLM_MODEL:** Use the cross-region inference profile ID — the prefix depends on your region: `us.` for US regions, `eu.` for EU regions, `ap.` for AP regions (e.g. `ap.anthropic.claude-3-5-haiku-20241022-v1:0` for `ap-south-1`). Direct model IDs are not supported for on-demand throughput for newer Claude models.
 
 ---
 
@@ -528,7 +528,7 @@ The Lambda role is missing AWS Marketplace permissions required for Bedrock's au
 
 **2. `ValidationException: Invocation of model ID ... with on-demand throughput isn't supported`**
 
-You're using a direct model ID for a newer Claude model. Use the cross-region inference profile ID instead — prefix the model ID with `us.` (e.g. `us.anthropic.claude-3-5-haiku-20241022-v1:0`).
+You're using a direct model ID for a newer Claude model. Use the cross-region inference profile ID instead — prefix the model ID with the appropriate region prefix: `us.` for US regions, `eu.` for EU regions, `ap.` for AP regions (e.g. `ap.anthropic.claude-3-5-haiku-20241022-v1:0` for `ap-south-1`).
 
 **3. PDF uploaded but not indexed / no chunks appear**
 
