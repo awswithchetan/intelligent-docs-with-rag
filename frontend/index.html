@@ -483,7 +483,9 @@ async function uploadFile(file) {
       method: "POST", headers: {"Content-Type": "application/json"},
       body: JSON.stringify({filename: file.name})
     });
+    if (!res.ok) throw new Error(`Failed to get upload URL: ${res.status}`);
     const { upload_url } = await res.json();
+    if (!upload_url) throw new Error("No upload URL returned");
     setStatus(item, "loading", "Uploading…");
 
     // 2. PUT to S3
