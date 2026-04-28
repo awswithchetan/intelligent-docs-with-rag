@@ -375,13 +375,8 @@ Create a resource and method for each of the three routes. Repeat the steps belo
 3. **Integration type:** Lambda function
 4. ✅ Check **Lambda proxy integration**
 5. **Lambda function:** select the corresponding function from the table above
-6. Click **Save**
-
-**Enable CORS on each resource** (repeat for all three):
-1. Select the resource → **Enable CORS**
-2. Leave defaults → **Save**
-
-This automatically creates the OPTIONS method with the correct headers.
+6. ✅ Check **CORS** — this automatically adds the OPTIONS method with the correct headers
+7. Click **Save**
 
 **Deploy the API:**
 1. **Deploy API** → **New stage** → **Stage name:** `demo`
