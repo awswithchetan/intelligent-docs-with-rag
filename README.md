@@ -33,7 +33,7 @@ S3 Vectors ◄──► intelligent-docs-search ──► Bedrock Claude (answer
 | Answer generation | Anthropic Claude 3.5 Haiku (via Bedrock) | ~$0.01–$0.05 per 100 questions |
 | PDF processing | pypdf | Free (runs inside Lambda) |
 | Auth | Amazon Cognito (Hosted UI, implicit flow) | Free (up to 50,000 MAUs) |
-| API | Amazon API Gateway (REST) + Lambda (Python 3.12) | Free tier covers typical demo usage |
+| API | Amazon API Gateway (REST) + Lambda (Python 3.14) | Free tier covers typical demo usage |
 | Document storage | Amazon S3 | ~$0.00 (a few PDFs = negligible) |
 
 > **Total estimated cost for demo usage: < $1/month.** All services either fall within the AWS Free Tier or cost fractions of a cent at the scale of a few documents and occasional queries.
@@ -190,7 +190,7 @@ zip -r pypdf-layer.zip python/
 aws lambda publish-layer-version \
   --layer-name intelligent-docs-pypdf-layer \
   --zip-file fileb://pypdf-layer.zip \
-  --compatible-runtimes python3.12 \
+  --compatible-runtimes python3.14 \
   --region YOUR_REGION
 ```
 
@@ -199,7 +199,7 @@ Note the `LayerVersionArn` from the output — you'll need it when attaching the
 **Alternatively, via the Lambda console** → **Layers** → **Create layer**:
 - Name: `intelligent-docs-pypdf-layer`
 - Upload `pypdf-layer.zip`
-- Compatible runtime: Python 3.12
+- Compatible runtime: Python 3.14
 
 ---
 
@@ -208,7 +208,7 @@ Note the `LayerVersionArn` from the output — you'll need it when attaching the
 Create four Lambda functions. For each one:
 
 1. Go to **Lambda Console** → **Create function** → **Author from scratch**
-2. **Runtime:** Python 3.12
+2. **Runtime:** Python 3.14
 3. **Execution role:** Use existing role → `intelligent-docs-lambda-role`
 
 After creating, paste the code in the inline editor and click **Deploy**.
