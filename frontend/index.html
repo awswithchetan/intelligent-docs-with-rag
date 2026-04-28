@@ -491,10 +491,18 @@ async function uploadFile(file) {
     // 2. PUT to S3
     const s3Res = await fetch(upload_url, { method: "PUT", body: file });
     if (!s3Res.ok) throw new Error(`S3 upload failed: ${s3Res.status}`);
-    setStatus(item, "done", "✓ Processing…");
+    setStatus(item, "loading", "Processing…");
 
-    // Processing happens async via S3 trigger — show feedback after delay
-    setStatus(item, "done", "✓ Indexed");
+    // Poll /docs until file appears (max 60s)
+    const name = file.name;
+    let indexed = false;
+    for (let i = 0; i < 12; i++) {
+      await new Promise(r => setTimeout(r, 5000));
+      const docsRes = await apiFetch(`${API_BASE}/docs`);
+      const { docs } = await docsRes.json();
+      if (docs && docs.some(d => d.name === name)) { indexed = true; break; }
+    }
+    setStatus(item, indexed ? "done" : "error", indexed ? "✓ Indexed" : "✗ Indexing failed");
   } catch (err) {
     setStatus(item, "error", "✗ Failed");
     console.error(err);
