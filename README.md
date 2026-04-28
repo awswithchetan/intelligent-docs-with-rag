@@ -47,6 +47,15 @@ Ready-to-use sample HR policy documents are in `sample-docs/`:
 
 ## Deployment Steps
 
+### Step 0 — Clone the Repository
+
+```bash
+git clone https://github.com/awswithchetan/intelligent-docs-with-rag.git
+cd intelligent-docs-with-rag
+```
+
+---
+
 ### Step 1 — S3 Bucket (document storage)
 
 1. Go to **S3 Console** → **Create bucket**
