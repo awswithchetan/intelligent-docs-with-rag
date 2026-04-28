@@ -6,23 +6,7 @@ A serverless RAG (Retrieval-Augmented Generation) application that lets employee
 
 ## Architecture
 
-```
-Browser (localhost)
-    │
-    ├── Cognito Hosted UI (login)
-    │
-    └── API Gateway (REST)
-            ├── POST /upload-url  → Lambda: intelligent-docs-upload    [admin only]
-            ├── GET  /docs        → Lambda: intelligent-docs-list
-            └── POST /search      → Lambda: intelligent-docs-search
-
-S3 (docs/*.pdf) ──► S3 Event ──► Lambda: intelligent-docs-ingest
-                                      ├── pypdf (text extraction)
-                                      ├── Bedrock Titan Embed v2 (embeddings)
-                                      └── S3 Vectors (store chunks)
-
-S3 Vectors ◄──► intelligent-docs-search ──► Bedrock Claude (answer generation)
-```
+<img width="980" height="540" alt="image" src="https://github.com/user-attachments/assets/48c91012-97b8-4c41-bb0b-99fcd2a71c21" />
 
 ## Tech Stack
 
