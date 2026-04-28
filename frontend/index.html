@@ -389,11 +389,13 @@ function apiFetch(url, opts = {}) {
 }
 
 async function initAuth() {
-  // Implicit flow: token is in URL hash after redirect
+  // Implicit flow: tokens are in URL hash after redirect
   const hash = new URLSearchParams(window.location.hash.slice(1));
-  const hashToken = hash.get("id_token");
-  if (hashToken) {
-    sessionStorage.setItem("id_token", hashToken);
+  const hashIdToken = hash.get("id_token");
+  const hashAccessToken = hash.get("access_token");
+  if (hashIdToken) {
+    sessionStorage.setItem("id_token", hashIdToken);
+    sessionStorage.setItem("access_token", hashAccessToken || hashIdToken);
     window.history.replaceState({}, "", window.location.pathname);
   }
 
@@ -401,11 +403,15 @@ async function initAuth() {
   if (token) {
     const claims = parseJwt(token);
     if (claims.exp && claims.exp * 1000 > Date.now()) {
-      authToken  = token;
+      authToken  = sessionStorage.getItem("access_token") || token;
       userEmail  = claims.email || "";
-      userGroups = claims["cognito:groups"] || [];
+      // cognito:groups may only be in access_token, check both
+      const accessToken = sessionStorage.getItem("access_token");
+      const accessClaims = accessToken ? parseJwt(accessToken) : {};
+      userGroups = claims["cognito:groups"] || accessClaims["cognito:groups"] || [];
     } else {
       sessionStorage.removeItem("id_token");
+      sessionStorage.removeItem("access_token");
     }
   }
   renderAuthState();
@@ -415,6 +421,7 @@ function isAdmin() { return userGroups.includes("admins"); }
 
 function signOut() {
   sessionStorage.removeItem("id_token");
+  sessionStorage.removeItem("access_token");
   window.location.href = window.location.pathname;
 }
 
