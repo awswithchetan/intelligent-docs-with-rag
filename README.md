@@ -282,10 +282,10 @@ Create four Lambda functions with the following names:
 | `VECTOR_BUCKET` | `intelligent-docs-vectors` | S3 vector bucket to query |
 | `VECTOR_INDEX` | `intelligent-docs-hr-policy-index` | Vector index to search against |
 | `EMBED_MODEL` | `amazon.titan-embed-text-v2:0` | Bedrock model used to embed the user's question |
-| `LLM_MODEL` | `ap.anthropic.claude-3-5-haiku-20241022-v1:0` | Bedrock inference profile used to generate the answer |
+| `LLM_MODEL` | `apac.anthropic.claude-3-5-sonnet-20241022-v2:0` | Bedrock inference profile used to generate the answer |
 | `TOP_K` | `15` | Number of most similar chunks to retrieve from the index |
 
-> **Note on LLM_MODEL:** Use the cross-region inference profile ID — the prefix depends on your region: `us.` for US regions, `eu.` for EU regions, `ap.` for AP regions (e.g. `ap.anthropic.claude-3-5-haiku-20241022-v1:0` for `ap-south-1`). Direct model IDs are not supported for on-demand throughput for newer Claude models.
+> **Note on LLM_MODEL:** Use the cross-region inference profile ID — the prefix depends on your region: `us.` for US regions, `eu.` for EU regions, `apac.` for AP regions (e.g. `apac.anthropic.claude-3-5-sonnet-20241022-v2:0` for `ap-south-1`). Direct model IDs are not supported for on-demand throughput for newer Claude models.
 
 ---
 
