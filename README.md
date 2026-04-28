@@ -39,6 +39,15 @@ Ready-to-use sample HR policy documents are in `sample-docs/`:
 - AWS account
 - AWS CLI configured locally
 - Python 3 and `pip` installed locally (for building the Lambda layer)
+
+  **Mac:**
+  ```bash
+  brew install python
+  ```
+  **Ubuntu:**
+  ```bash
+  sudo apt update && sudo apt install -y python3 python3-pip
+  ```
 - Bedrock model access: as of late 2025, all serverless models are **automatically enabled** — no manual activation needed
 
 > All steps below use `ap-south-1` (Mumbai) as an example. You can use any AWS region that supports Bedrock, S3 Vectors, and Cognito — just replace `ap-south-1` consistently throughout.
