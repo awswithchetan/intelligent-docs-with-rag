@@ -42,11 +42,11 @@ Ready-to-use sample HR policy documents are in `sample-docs/`:
 
   **Mac:**
   ```bash
-  brew install python
+  brew install python zip
   ```
   **Ubuntu:**
   ```bash
-  sudo apt update && sudo apt install -y python3 python3-pip
+  sudo apt update && sudo apt install -y python3 python3-pip zip
   ```
 - Bedrock model access: as of late 2025, all serverless models are **automatically enabled** — no manual activation needed
 
