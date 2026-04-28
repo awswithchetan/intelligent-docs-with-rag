@@ -413,7 +413,8 @@ If `/docs` returns `{"docs": []}`, the Lambda integrations are working correctly
 3. **App name:** `intelligent-docs-app`
 4. **Sign-in options:** Email
 5. **Return URL:** `http://localhost:8080` (or whatever port you'll serve the frontend on)
-6. Click **Create**
+6. Disable **Self-registration** (so only admin-created users can sign in)
+7. Click **Create**
 
 This creates both the User Pool and App Client in one step.
 
