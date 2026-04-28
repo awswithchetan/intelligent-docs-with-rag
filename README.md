@@ -232,7 +232,7 @@ Create four Lambda functions with the following names:
 1. Go to **Lambda Console** → **Create function** → **Author from scratch**
 2. **Function name:** `intelligent-docs-ingest`
 3. **Runtime:** Python 3.14
-4. **Execution role:** Use existing role → `intelligent-docs-lambda-role`
+4. **Additional settings** → toggle **Custom execution role** → select `intelligent-docs-lambda-role`
 5. Click **Create function**
 6. Paste contents of `backend/ingest/lambda_function_s3vectors.py` as `lambda_function.py` → **Deploy**
 
@@ -266,7 +266,7 @@ Create four Lambda functions with the following names:
 1. Go to **Lambda Console** → **Create function** → **Author from scratch**
 2. **Function name:** `intelligent-docs-search`
 3. **Runtime:** Python 3.14
-4. **Execution role:** Use existing role → `intelligent-docs-lambda-role`
+4. **Additional settings** → toggle **Custom execution role** → select `intelligent-docs-lambda-role`
 5. Click **Create function**
 6. Paste contents of `backend/search/lambda_function_s3vectors.py` as `lambda_function.py` → **Deploy**
 
@@ -294,7 +294,7 @@ Create four Lambda functions with the following names:
 1. Go to **Lambda Console** → **Create function** → **Author from scratch**
 2. **Function name:** `intelligent-docs-list`
 3. **Runtime:** Python 3.14
-4. **Execution role:** Use existing role → `intelligent-docs-lambda-role`
+4. **Additional settings** → toggle **Custom execution role** → select `intelligent-docs-lambda-role`
 5. Click **Create function**
 6. Paste contents of `backend/docs/lambda_function.py` as `lambda_function.py` → **Deploy**
 
@@ -318,7 +318,7 @@ Create four Lambda functions with the following names:
 1. Go to **Lambda Console** → **Create function** → **Author from scratch**
 2. **Function name:** `intelligent-docs-upload`
 3. **Runtime:** Python 3.14
-4. **Execution role:** Use existing role → `intelligent-docs-lambda-role`
+4. **Additional settings** → toggle **Custom execution role** → select `intelligent-docs-lambda-role`
 5. Click **Create function**
 6. Paste contents of `backend/upload_url/lambda_function.py` as `lambda_function.py` → **Deploy**
 
