@@ -38,6 +38,17 @@ Ready-to-use sample HR policy documents are in `sample-docs/`:
 
 - AWS account
 - AWS CLI configured locally
+
+  **Mac:**
+  ```bash
+  brew install awscli
+  aws configure
+  ```
+  **Ubuntu:**
+  ```bash
+  sudo apt update && sudo apt install -y awscli
+  aws configure
+  ```
 - Python 3 and `pip` installed locally (for building the Lambda layer)
 
   **Mac:**
