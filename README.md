@@ -225,23 +225,21 @@ Create four Lambda functions with the following names:
 - `intelligent-docs-list`
 - `intelligent-docs-upload`
 
-**Common steps for each function:**
-
-1. Go to **Lambda Console** → **Create function** → **Author from scratch**
-2. **Runtime:** Python 3.14
-3. **Execution role:** Use existing role → `intelligent-docs-lambda-role`
-4. Click **Create function**
-5. After creating, paste the code in the inline editor and click **Deploy**
-
 ---
 
 #### 5.1 intelligent-docs-ingest
+
+1. Go to **Lambda Console** → **Create function** → **Author from scratch**
+2. **Function name:** `intelligent-docs-ingest`
+3. **Runtime:** Python 3.14
+4. **Execution role:** Use existing role → `intelligent-docs-lambda-role`
+5. Click **Create function**
+6. Paste contents of `backend/ingest/lambda_function_s3vectors.py` as `lambda_function.py` → **Deploy**
 
 **Configuration:**
 - **Handler:** `lambda_function.lambda_handler`
 - **Timeout:** 300 seconds
 - **Memory:** 512 MB
-- **Code:** paste contents of `backend/ingest/lambda_function_s3vectors.py` as `lambda_function.py`
 
 **Attach the pypdf layer:**
 
@@ -265,11 +263,17 @@ Create four Lambda functions with the following names:
 
 #### 5.2 intelligent-docs-search
 
+1. Go to **Lambda Console** → **Create function** → **Author from scratch**
+2. **Function name:** `intelligent-docs-search`
+3. **Runtime:** Python 3.14
+4. **Execution role:** Use existing role → `intelligent-docs-lambda-role`
+5. Click **Create function**
+6. Paste contents of `backend/search/lambda_function_s3vectors.py` as `lambda_function.py` → **Deploy**
+
 **Configuration:**
 - **Handler:** `lambda_function.lambda_handler`
 - **Timeout:** 60 seconds
 - **Memory:** 512 MB
-- **Code:** paste contents of `backend/search/lambda_function_s3vectors.py` as `lambda_function.py`
 
 **Environment variables:**
 
@@ -287,11 +291,17 @@ Create four Lambda functions with the following names:
 
 #### 5.3 intelligent-docs-list
 
+1. Go to **Lambda Console** → **Create function** → **Author from scratch**
+2. **Function name:** `intelligent-docs-list`
+3. **Runtime:** Python 3.14
+4. **Execution role:** Use existing role → `intelligent-docs-lambda-role`
+5. Click **Create function**
+6. Paste contents of `backend/docs/lambda_function.py` as `lambda_function.py` → **Deploy**
+
 **Configuration:**
 - **Handler:** `lambda_function.lambda_handler`
 - **Timeout:** 30 seconds
 - **Memory:** 256 MB
-- **Code:** paste contents of `backend/docs/lambda_function.py` as `lambda_function.py`
 
 **Environment variables:**
 
@@ -305,11 +315,17 @@ Create four Lambda functions with the following names:
 
 #### 5.4 intelligent-docs-upload
 
+1. Go to **Lambda Console** → **Create function** → **Author from scratch**
+2. **Function name:** `intelligent-docs-upload`
+3. **Runtime:** Python 3.14
+4. **Execution role:** Use existing role → `intelligent-docs-lambda-role`
+5. Click **Create function**
+6. Paste contents of `backend/upload_url/lambda_function.py` as `lambda_function.py` → **Deploy**
+
 **Configuration:**
 - **Handler:** `lambda_function.lambda_handler`
 - **Timeout:** 15 seconds
 - **Memory:** 256 MB
-- **Code:** paste contents of `backend/upload_url/lambda_function.py` as `lambda_function.py`
 
 **Environment variables:**
 
