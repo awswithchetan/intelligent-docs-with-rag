@@ -286,6 +286,10 @@ Create four Lambda functions with the following names:
 | `TOP_K` | `15` | Number of most similar chunks to retrieve from the index |
 
 > **Note on LLM_MODEL:** Use the cross-region inference profile ID — the prefix depends on your region: `us.` for US regions, `eu.` for EU regions, `apac.` for AP regions (e.g. `apac.anthropic.claude-3-5-sonnet-20241022-v2:0` for `ap-south-1`). Direct model IDs are not supported for on-demand throughput for newer Claude models.
+>
+> To find the correct profile ID for your region:
+> - **Console:** Go to **Amazon Bedrock** → **Cross-region inference** — lists all available profiles and their IDs
+> - **CLI:** Run `aws bedrock list-inference-profiles --type-equals SYSTEM_DEFINED --region YOUR_REGION` and look for the `inferenceProfileId` of your preferred model
 
 ---
 
