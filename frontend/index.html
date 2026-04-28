@@ -489,10 +489,7 @@ async function uploadFile(file) {
     setStatus(item, "loading", "Uploading…");
 
     // 2. PUT to S3
-    const s3Res = await fetch(upload_url, {
-      method: "PUT", body: file,
-      headers: { "Content-Type": "application/octet-stream" }
-    });
+    const s3Res = await fetch(upload_url, { method: "PUT", body: file });
     if (!s3Res.ok) throw new Error(`S3 upload failed: ${s3Res.status}`);
     setStatus(item, "done", "✓ Processing…");
 

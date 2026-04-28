@@ -36,7 +36,7 @@ def lambda_handler(event, context):
     key      = f"docs/{filename}"
     url      = s3.generate_presigned_url(
         "put_object",
-        Params={"Bucket": BUCKET, "Key": key, "ContentType": "application/octet-stream"},
+        Params={"Bucket": BUCKET, "Key": key},
         ExpiresIn=300
     )
     return resp(200, {"upload_url": url, "key": key})
