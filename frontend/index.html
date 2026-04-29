@@ -346,10 +346,10 @@
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
-const API_BASE = "https://YOUR_API_ID.execute-api.YOUR_REGION.amazonaws.com/demo";
+const API_BASE = "<API_GATEWAY_URL_INCLUDING_STAGE>";
 const COGNITO = {
-  domain:   "https://YOUR_DOMAIN.auth.YOUR_REGION.amazoncognito.com",
-  clientId: "YOUR_APP_CLIENT_ID",
+  domain:   "<COGNITO_DOMAIN_URL>",
+  clientId: "<APP_CLIENT_ID>",
   redirect: window.location.origin + window.location.pathname
 };
 // ─────────────────────────────────────────────────────────────────────────────
