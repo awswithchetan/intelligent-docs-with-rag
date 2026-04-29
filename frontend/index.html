@@ -403,7 +403,7 @@ async function initAuth() {
   if (token) {
     const claims = parseJwt(token);
     if (claims.exp && claims.exp * 1000 > Date.now()) {
-      authToken  = sessionStorage.getItem("access_token") || token;
+      authToken  = token; // API GW Cognito authorizer requires id_token
       userEmail  = claims.email || "";
       // cognito:groups may only be in access_token, check both
       const accessToken = sessionStorage.getItem("access_token");
