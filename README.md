@@ -529,7 +529,7 @@ The Lambda role is missing AWS Marketplace permissions required for Bedrock's au
 
 **2. `ValidationException: Invocation of model ID ... with on-demand throughput isn't supported`**
 
-You're using a direct model ID for a newer Claude model. Use the cross-region inference profile ID instead — prefix the model ID with the appropriate region prefix: `us.` for US regions, `eu.` for EU regions, `ap.` for AP regions (e.g. `ap.anthropic.claude-3-5-haiku-20241022-v1:0` for `ap-south-1`).
+You're using a direct model ID for a newer Claude model. Use the cross-region inference profile ID instead — prefix the model ID with the appropriate region prefix: `us.` for US regions, `eu.` for EU regions, `apac.` for AP regions (e.g. `apac.anthropic.claude-3-5-sonnet-20241022-v2:0` for `ap-south-1`).
 
 **3. PDF uploaded but not indexed / no chunks appear**
 
